@@ -10,11 +10,16 @@ export function useWorkoutLogic(totalDurationMinutes: number, totalSteps: number
     const [isActive, setIsActive] = useState(true);
     const [isCompleted, setIsCompleted] = useState(false);
 
+    const savedOnComplete = useRef(onComplete);
+    useEffect(() => {
+        savedOnComplete.current = onComplete;
+    }, [onComplete]);
+
     // We calculate current step based on elapsed time to ensure sync
     const elapsed = totalSeconds - timeLeft;
     const currentStepIndex = Math.min(
         Math.floor(elapsed / stepDurationSeconds),
-        totalSteps - 1
+        totalSteps > 0 ? totalSteps - 1 : 0
     );
 
     // Step Time Calculation
@@ -28,18 +33,20 @@ export function useWorkoutLogic(totalDurationMinutes: number, totalSteps: number
         if (isActive && timeLeft > 0) {
             interval = setInterval(() => {
                 setTimeLeft((prev) => {
-                    if (prev <= 1) {
-                        setIsActive(false);
-                        setIsCompleted(true);
-                        onComplete();
-                        return 0;
-                    }
-                    return prev - 1;
+                    return prev > 0 ? prev - 1 : 0;
                 });
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [isActive, timeLeft, onComplete]);
+    }, [isActive, timeLeft > 0]);
+
+    useEffect(() => {
+        if (timeLeft === 0 && !isCompleted) {
+            setIsActive(false);
+            setIsCompleted(true);
+            savedOnComplete.current();
+        }
+    }, [timeLeft, isCompleted]);
 
     const togglePause = () => setIsActive(!isActive);
 
@@ -56,6 +63,6 @@ export function useWorkoutLogic(totalDurationMinutes: number, totalSteps: number
             return `${m}:${s < 10 ? '0' : ''}${s}`;
         },
         progressPercentage: (timeLeft / totalSeconds) * 100,
-        stepProgressPercentage: (stepTimeLeft / stepDurationSeconds) * 100
+        stepProgressPercentage: totalSteps > 0 ? (stepTimeLeft / stepDurationSeconds) * 100 : 100
     };
 }

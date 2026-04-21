@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import { CircularTimer } from '@/components/ui/CircularTimer';
 import { useWorkoutLogic } from '@/hooks/useWorkoutLogic';
 import Image from 'next/image';
+import { Header } from '@/components/Header';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -18,7 +19,7 @@ interface PageProps {
 
 export default function WorkoutActivePage({ params }: PageProps) {
     const router = useRouter();
-    const { completeWorkout, profile } = useFitFun();
+    const { completeWorkout, profile, progress } = useFitFun();
 
     // Unwrap params
     const resolvedParams = use(params);
@@ -56,11 +57,23 @@ export default function WorkoutActivePage({ params }: PageProps) {
     // Check if either hook says we are done, or we manually finished
     const isCompleted = hookCompleted || manualCompleted;
 
+    // Calculate Gamified Math
+    const weightKg = profile.weightUnit === 'lbs' ? (profile.weight || 150) * 0.453592 : (profile.weight || 68);
+    const calculatedCalories = Math.round(duration * 6 * 3.5 * weightKg / 200);
+    const calculatedPoints = duration === 5 ? 50 : duration === 10 ? 100 : 200;
+    const completedDay = progress?.currentPlanDay || 1;
+
     // Handle Completion Celebration
     const triggerCompletion = () => {
         setManualCompleted(true); // Force local state to transparently switch to completion view
         const validCategory = (workout?.category.toLowerCase() as any) || 'cardio';
-        completeWorkout(validCategory, duration);
+        completeWorkout({
+            type: validCategory,
+            duration: duration,
+            points: calculatedPoints,
+            calories: calculatedCalories,
+            workoutId: workout?.id || 'unknown'
+        });
         setTimeout(() => {
             confetti({
                 particleCount: 150,
@@ -102,8 +115,26 @@ export default function WorkoutActivePage({ params }: PageProps) {
 
     if (isCompleted) {
         // --- COMPLETION VIEW (Restored Design + Gabi) ---
-        const calories = workout ? workout.duration * 7 : 0;
         const stepCount = workout ? workout.duration * 100 : 0;
+        
+        // At this point, the context may have incremented `currentPlanDay`.
+        // We use the locked `completedDay` calculated outside, but since component re-renders,
+        // it might shift. It's safer to use progress.currentPlanDay - 1 if it incremented, 
+        // but `Math.max(1, progress.currentPlanDay - 1)` perfectly represents the last completed day.
+        const displayDay = Math.max(1, progress.currentPlanDay - 1);
+
+        const getMotivationalMessage = (day: number) => {
+            switch(day) {
+                case 1: return "First step taken! The journey has officially begun.";
+                case 2: return "Day 2 complete! You're building momentum.";
+                case 3: return "Three days in! You're building a serious habit.";
+                case 4: return "Past the midway point! Your consistency is paying off.";
+                case 5: return "Day 5 crushed! The finish line is in sight.";
+                case 6: return "Only one day left! Let's finish strong.";
+                case 7: return "You did it! 7 Days of consistent action! Beta Complete!";
+                default: return "Awesome job! You just crushed another workout.";
+            }
+        };
 
         return (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -123,18 +154,22 @@ export default function WorkoutActivePage({ params }: PageProps) {
                         />
                     </div>
 
+                    <div className="bg-brand-100 text-brand-600 px-4 py-1.5 rounded-full font-bold text-sm inline-block mx-auto mb-4 tracking-wide">
+                        DAY {displayDay} COMPLETED!
+                    </div>
+
                     {/* Header */}
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase mb-4">CONGRATS!</h1>
 
-                    <p className="text-gray-600 mb-8 leading-relaxed text-sm px-2">
-                        You just completed a workout! Keep going to unlock longer and more intense workouts.
+                    <p className="text-gray-600 mb-8 leading-relaxed text-[15px] font-medium px-2">
+                        {getMotivationalMessage(displayDay)}
                     </p>
 
                     {/* Stats */}
                     <div className="flex justify-between items-start mb-10 px-4">
                         <div className="flex flex-col items-center gap-1">
                             <Star size={28} className="text-gray-900 mb-1" strokeWidth={1.5} />
-                            <span className="text-xl font-bold text-gray-900">{workout?.points}</span>
+                            <span className="text-xl font-bold text-gray-900">{calculatedPoints}</span>
                             <span className="text-xs text-gray-500 font-medium lowercase">points</span>
                         </div>
                         <div className="flex flex-col items-center gap-1">
@@ -144,7 +179,7 @@ export default function WorkoutActivePage({ params }: PageProps) {
                         </div>
                         <div className="flex flex-col items-center gap-1">
                             <Flame size={28} className="text-gray-900 mb-1" strokeWidth={1.5} />
-                            <span className="text-xl font-bold text-gray-900">{calories}</span>
+                            <span className="text-xl font-bold text-gray-900">{calculatedCalories}</span>
                             <span className="text-xs text-gray-500 font-medium lowercase">calories</span>
                         </div>
                     </div>
@@ -172,15 +207,11 @@ export default function WorkoutActivePage({ params }: PageProps) {
     return (
         <div className="absolute inset-0 flex flex-col bg-[#FFFDF7] overflow-hidden animate-in fade-in duration-500">
             {/* 1. Header */}
-            <div className="flex justify-between items-center px-6 pt-6 pb-4 z-10">
-                <button onClick={() => setShowFinishConfirm(true)} className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors">
-                    <X size={20} />
-                </button>
-                <div className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                    {type} • {duration} Mins
-                </div>
-                <div className="w-9"></div>
-            </div>
+            <Header 
+                showBack 
+                onBack={() => setShowFinishConfirm(true)} 
+                title={`${type} • ${duration} Mins`} 
+            />
 
             {/* 2. Main Timer Area */}
             <div className="flex flex-col items-center pt-4 md:pt-8 w-full shrink-0">

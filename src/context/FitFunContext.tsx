@@ -8,12 +8,25 @@ import { workouts } from '@/data/workouts';
 
 export type GoalType = 'cardio' | 'strength' | 'mobility';
 
+export type ActivityLevel = 'Sedentary' | 'Lightly Active' | 'Moderately Active' | 'Very Active' | '';
+export type FitnessGoal = 'Weight loss' | 'Muscle gain' | 'Maintain weight' | '';
+
 export interface Profile {
   name: string;
   motivation: string;
   goalType: GoalType;
   setupComplete: boolean;
   joinDate: string;
+  
+  // New Physical/Personal Fields
+  profileImage?: string; // base64
+  heightPrimary?: number; // ft or m
+  heightSecondary?: number; // in or cm
+  heightUnit?: 'ft/in' | 'm/cm';
+  weight?: number;
+  weightUnit?: 'lbs' | 'kg';
+  activityLevel?: ActivityLevel;
+  fitnessGoal?: FitnessGoal;
 }
 
 export interface WorkoutLog {
@@ -22,6 +35,7 @@ export interface WorkoutLog {
   type: GoalType;
   duration: number; // minutes
   points: number;
+  calories: number;
   workoutId: string; // e.g. "cardio_5"
 }
 
@@ -29,6 +43,7 @@ export interface Progress {
   totalPoints: number; // Renamed from points
   points: number; // Kept for backward compatibility if needed, but we should migrate
   workoutsCompleted: number; // New field
+  currentPlanDay: number;
   currentStreak: number;
   lastWorkoutDate: string | null; // "YYYY-MM-DD"
   badges: string[];
@@ -39,7 +54,7 @@ interface FitFunContextType {
   progress: Progress;
   logs: WorkoutLog[];
   updateProfile: (data: Partial<Profile>) => void;
-  completeWorkout: (type: GoalType, duration: number) => void;
+  completeWorkout: (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string }) => void;
   resetProgress: () => void;
   isLoading: boolean;
 }
@@ -52,12 +67,15 @@ const INITIAL_PROFILE: Profile = {
   goalType: 'cardio',
   setupComplete: false,
   joinDate: '',
+  heightUnit: 'ft/in',
+  weightUnit: 'lbs',
 };
 
 const INITIAL_PROGRESS: Progress = {
   totalPoints: 0,
   points: 0,
   workoutsCompleted: 0,
+  currentPlanDay: 1,
   currentStreak: 0,
   lastWorkoutDate: null,
   badges: [],
@@ -95,6 +113,7 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
       setProgress({
         ...INITIAL_PROGRESS,
         ...loaded,
+        currentPlanDay: loaded.currentPlanDay ?? 1,
         totalPoints: loaded.totalPoints ?? loaded.points ?? 0,
         workoutsCompleted: loaded.workoutsCompleted ?? 0
       });
@@ -116,26 +135,18 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     setProfile((prev) => ({ ...prev, ...data }));
   };
 
-  const completeWorkout = (type: GoalType, duration: number) => {
-    // Reconstruct ID to match workout data (e.g. "cardio_5")
-    const workoutId = `${type.toLowerCase()}_${duration}`;
-
-    // Find workout data or fallback
-    const workoutData = workouts.find(w => w.id === workoutId) || {
-      id: workoutId,
-      points: (duration === 5 ? 15 : duration === 10 ? 30 : 60)
-    };
-
+  const completeWorkout = (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string }) => {
     const now = new Date().toISOString();
 
     // 1. Update Logs
     const newLog: WorkoutLog = {
       id: crypto.randomUUID(),
       date: now,
-      type,
-      duration,
-      points: workoutData.points,
-      workoutId: workoutId
+      type: data.type,
+      duration: data.duration,
+      points: data.points,
+      calories: data.calories,
+      workoutId: data.workoutId
     };
     const newLogs = [newLog, ...logs];
     setLogs(newLogs);
@@ -143,24 +154,26 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     // 2. Use Engine to Update Progress
     const engineUpdated = updateProgress(progress, newLog);
 
-    // 3. Use Engine to Check Badges
+    // 3. Update internal Plan Day sequentially
+    const newPlanDay = engineUpdated.currentPlanDay + 1;
+
+    // 4. Use Engine to Check Badges
     const newBadges = checkBadges(engineUpdated, newLogs);
 
     setProgress({
       ...engineUpdated,
+      currentPlanDay: newPlanDay,
       badges: newBadges,
       points: engineUpdated.totalPoints // Sync legacy field
     });
   };
 
   const resetProgress = () => {
-    if (confirm("Are you sure you want to reset all progress?")) {
-      setProfile(INITIAL_PROFILE);
-      setProgress(INITIAL_PROGRESS);
-      setLogs([]);
-      localStorage.clear();
-      window.location.href = '/';
-    }
+    setProfile(INITIAL_PROFILE);
+    setProgress(INITIAL_PROGRESS);
+    setLogs([]);
+    localStorage.clear();
+    window.location.href = '/';
   };
 
   return (
