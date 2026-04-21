@@ -330,7 +330,7 @@ export default function OnboardingPage() {
             
             <div className={clsx(
                 "flex-1 overflow-y-auto overflow-x-hidden flex flex-col relative",
-                (step !== 0 && step !== 7) ? "pb-[260px]" : "pb-8"
+                [1, 3, 4].includes(step) ? "pb-[260px]" : "pb-8"
             )}>
                 <AnimatePresence mode="wait">
                     {step === 0 && (
