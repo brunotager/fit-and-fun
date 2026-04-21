@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { updateProgress, checkBadges } from '@/lib/progressEngine';
 import { workouts } from '@/data/workouts';
 
@@ -37,6 +37,7 @@ export interface WorkoutLog {
   points: number;
   calories: number;
   workoutId: string; // e.g. "cardio_5"
+  completionType?: 'timer_finished' | 'manual_end'; // NEW
 }
 
 export interface Progress {
@@ -50,11 +51,12 @@ export interface Progress {
 }
 
 interface FitFunContextType {
+  userId: string;
   profile: Profile;
   progress: Progress;
   logs: WorkoutLog[];
   updateProfile: (data: Partial<Profile>) => void;
-  completeWorkout: (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string }) => void;
+  completeWorkout: (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string; completionType?: 'timer_finished' | 'manual_end' }) => void;
   resetProgress: () => void;
   updateProgressState: (data: Partial<Progress>) => void;
   isLoading: boolean;
@@ -96,20 +98,29 @@ export const BADGES = [
 const FitFunContext = createContext<FitFunContextType | undefined>(undefined);
 
 export function FitFunProvider({ children }: { children: React.ReactNode }) {
+  const [userId, setUserId] = useState<string>('');
   const [profile, setProfile] = useState<Profile>(INITIAL_PROFILE);
   const [progress, setProgress] = useState<Progress>(INITIAL_PROGRESS);
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Load from localStorage on mount
   useEffect(() => {
+    let savedUserId = localStorage.getItem('fitfun_user_id');
+    if (!savedUserId) {
+      savedUserId = crypto.randomUUID();
+      localStorage.setItem('fitfun_user_id', savedUserId);
+    }
+    setUserId(savedUserId);
+
     const savedProfile = localStorage.getItem('fitfun_profile');
     const savedProgress = localStorage.getItem('fitfun_progress');
     const savedLogs = localStorage.getItem('fitfun_workouts_log');
 
     if (savedProfile) setProfile(JSON.parse(savedProfile));
     if (savedProgress) {
-      // Migration support: if totalPoints/workoutsCompleted missing
       const loaded = JSON.parse(savedProgress);
       setProgress({
         ...INITIAL_PROGRESS,
@@ -132,6 +143,34 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('fitfun_workouts_log', JSON.stringify(logs));
   }, [profile, progress, logs, isLoading]);
 
+  const syncProfileToDB = useCallback((currentProfile: Profile, currentProgress: Progress, currentUserId: string) => {
+    if (!currentProfile.setupComplete || !currentUserId) return;
+    
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    
+    syncTimeoutRef.current = setTimeout(() => {
+      fetch('/api/sync-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: currentUserId,
+          name: currentProfile.name,
+          joinDate: currentProfile.joinDate,
+          goalType: currentProfile.goalType,
+          fitnessGoal: currentProfile.fitnessGoal,
+          activityLevel: currentProfile.activityLevel,
+          lastActiveDay: currentProgress.currentPlanDay,
+        })
+      }).catch(err => console.error("Sync user error:", err));
+    }, 1500);
+  }, []);
+
+  // Watch for profile/progress changes to sync
+  useEffect(() => {
+    if (isLoading) return;
+    syncProfileToDB(profile, progress, userId);
+  }, [profile, progress.currentPlanDay, userId, isLoading, syncProfileToDB]);
+
   const updateProfile = (data: Partial<Profile>) => {
     setProfile((prev) => ({ ...prev, ...data }));
   };
@@ -140,10 +179,9 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     setProgress((prev) => ({ ...prev, ...data }));
   };
 
-  const completeWorkout = (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string }) => {
+  const completeWorkout = (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string; completionType?: 'timer_finished' | 'manual_end' }) => {
     const now = new Date().toISOString();
 
-    // 1. Update Logs
     const newLog: WorkoutLog = {
       id: crypto.randomUUID(),
       date: now,
@@ -151,25 +189,39 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
       duration: data.duration,
       points: data.points,
       calories: data.calories,
-      workoutId: data.workoutId
+      workoutId: data.workoutId,
+      completionType: data.completionType || 'manual_end'
     };
     const newLogs = [newLog, ...logs];
     setLogs(newLogs);
 
-    // 2. Use Engine to Update Progress
+    // Sync workout to DB
+    if (userId) {
+      fetch('/api/sync-workout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newLog.id,
+          userId: userId,
+          date: newLog.date,
+          type: newLog.type,
+          duration: newLog.duration,
+          points: newLog.points,
+          completionType: newLog.completionType,
+          workoutId: newLog.workoutId
+        })
+      }).catch(err => console.error("Sync workout error:", err));
+    }
+
     const engineUpdated = updateProgress(progress, newLog);
-
-    // 3. Update internal Plan Day sequentially
     const newPlanDay = engineUpdated.currentPlanDay + 1;
-
-    // 4. Use Engine to Check Badges
     const newBadges = checkBadges(engineUpdated, newLogs);
 
     setProgress({
       ...engineUpdated,
       currentPlanDay: newPlanDay,
       badges: newBadges,
-      points: engineUpdated.totalPoints // Sync legacy field
+      points: engineUpdated.totalPoints
     });
   };
 
@@ -177,12 +229,15 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     setProfile(INITIAL_PROFILE);
     setProgress(INITIAL_PROGRESS);
     setLogs([]);
-    localStorage.clear();
+    localStorage.removeItem('fitfun_profile');
+    localStorage.removeItem('fitfun_progress');
+    localStorage.removeItem('fitfun_workouts_log');
     window.location.href = '/';
   };
 
   return (
     <FitFunContext.Provider value={{
+      userId,
       profile,
       progress,
       logs,

@@ -51,7 +51,7 @@ export default function WorkoutActivePage({ params }: PageProps) {
         progressPercentage,
         stepProgressPercentage
     } = useWorkoutLogic(duration, steps.length, () => {
-        triggerCompletion();
+        triggerCompletion('timer_finished');
     });
 
     // Check if either hook says we are done, or we manually finished
@@ -64,7 +64,7 @@ export default function WorkoutActivePage({ params }: PageProps) {
     const completedDay = progress?.currentPlanDay || 1;
 
     // Handle Completion Celebration
-    const triggerCompletion = () => {
+    const triggerCompletion = (completionType: 'timer_finished' | 'manual_end' = 'manual_end') => {
         setManualCompleted(true); // Force local state to transparently switch to completion view
         const validCategory = (workout?.category.toLowerCase() as any) || 'cardio';
         completeWorkout({
@@ -72,7 +72,8 @@ export default function WorkoutActivePage({ params }: PageProps) {
             duration: duration,
             points: calculatedPoints,
             calories: calculatedCalories,
-            workoutId: workout?.id || 'unknown'
+            workoutId: workout?.id || 'unknown',
+            completionType: completionType
         });
         setTimeout(() => {
             confetti({
@@ -406,7 +407,7 @@ export default function WorkoutActivePage({ params }: PageProps) {
                             <p className="text-gray-500 text-sm mb-8 leading-relaxed">Are you sure you want to end this session?</p>
                             <div className="flex flex-col gap-3">
                                 <button
-                                    onClick={() => { setShowFinishConfirm(false); triggerCompletion(); }}
+                                    onClick={() => { setShowFinishConfirm(false); triggerCompletion('manual_end'); }}
                                     className="w-full py-4 font-bold text-white bg-brand-500 rounded-2xl hover:bg-brand-600 shadow-lg shadow-brand-500/20 active:scale-95 transition-transform"
                                 >
                                     Yes, Finish
