@@ -56,6 +56,7 @@ interface FitFunContextType {
   updateProfile: (data: Partial<Profile>) => void;
   completeWorkout: (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string }) => void;
   resetProgress: () => void;
+  updateProgressState: (data: Partial<Progress>) => void;
   isLoading: boolean;
 }
 
@@ -135,6 +136,10 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     setProfile((prev) => ({ ...prev, ...data }));
   };
 
+  const updateProgressState = (data: Partial<Progress>) => {
+    setProgress((prev) => ({ ...prev, ...data }));
+  };
+
   const completeWorkout = (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string }) => {
     const now = new Date().toISOString();
 
@@ -184,6 +189,7 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
       updateProfile,
       completeWorkout,
       resetProgress,
+      updateProgressState,
       isLoading
     }}>
       {children}

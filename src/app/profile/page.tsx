@@ -9,7 +9,7 @@ import {
     ChevronLeft, Camera, Ruler, Scale, User, 
     HeartPulse, Moon, Footprints, ChevronDown, ChevronUp 
 } from 'lucide-react';
-import type { Gender, ActivityLevel, FitnessGoal } from '@/context/FitFunContext';
+import type { ActivityLevel, FitnessGoal } from '@/context/FitFunContext';
 import { Header } from '@/components/Header';
 import { ConnectDeviceModal } from '@/components/ConnectDeviceModal';
 import { convertWeight, convertHeight } from '@/lib/conversions';
@@ -17,7 +17,7 @@ import { convertWeight, convertHeight } from '@/lib/conversions';
 type ExpandingField = 'height' | 'weight' | 'activityLevel' | 'fitnessGoal' | null;
 
 export default function ProfilePage() {
-    const { profile, updateProfile, updateProgress } = useFitFun();
+    const { profile, updateProfile, updateProgressState } = useFitFun();
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [expandedField, setExpandedField] = useState<ExpandingField>(null);
@@ -65,7 +65,7 @@ export default function ProfilePage() {
         });
 
         if (resetPlan) {
-            updateProgress({ currentPlanDay: 1 });
+            updateProgressState({ currentPlanDay: 1 });
         }
 
         setExpandedField(null);

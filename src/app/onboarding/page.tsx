@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFitFun, Gender, ActivityLevel, FitnessGoal } from '@/context/FitFunContext';
+import { useFitFun, ActivityLevel, FitnessGoal } from '@/context/FitFunContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import clsx from 'clsx';
