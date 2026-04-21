@@ -123,7 +123,7 @@ export default function WorkoutsPage() {
             <Header title="Your Personal Plan" />
 
             <div className="flex-1 flex flex-col px-6 mt-6 relative">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-4">
                     <div>
                         <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Today's Focus</h2>
                         <h1 className="text-[32px] font-black text-gray-900 tracking-tight">Day {currentDay}</h1>
@@ -157,7 +157,7 @@ export default function WorkoutsPage() {
                     </button>
                 </div>
 
-                <div className="mt-8 text-center text-gray-400 text-sm font-medium px-4 leading-relaxed">
+                <div className="mt-4 text-center text-gray-400 text-sm font-medium px-4 leading-relaxed">
                     "Consistent action creates consistent results.<br />Let's do this!"
                 </div>
             </div>

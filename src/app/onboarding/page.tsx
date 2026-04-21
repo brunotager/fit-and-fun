@@ -63,7 +63,7 @@ const ContinueButton = ({ onClick, disabled, text = "Continue" }: { onClick: () 
         onClick={onClick}
         disabled={disabled}
         className={clsx(
-            "w-full max-w-[320px] rounded-[24px] py-4 font-bold text-[19px] z-20 relative transition-all duration-300 mx-auto block mt-auto shrink-0",
+            "w-full max-w-[320px] rounded-[24px] py-4 font-bold text-[19px] z-20 relative transition-all duration-300 mx-auto block shrink-0",
             disabled 
                 ? "bg-stone-300 text-white shadow-none cursor-not-allowed" 
                 : "bg-[#E56B25] text-white shadow-lg shadow-brand-500/20 active:scale-95"
@@ -74,17 +74,19 @@ const ContinueButton = ({ onClick, disabled, text = "Continue" }: { onClick: () 
 );
 
 const InputScreen = ({ title, question, children, onNext, isValid }: { title?: string, question: string, children: React.ReactNode, onNext: () => void, isValid: boolean }) => (
-    <div className="flex-1 flex flex-col pt-0 pb-4 px-6 h-full min-h-0">
-        <h1 className="text-[20px] font-black text-center tracking-wide text-gray-900 mb-8 uppercase shrink-0">
+    <div className="flex-1 flex flex-col pt-2 pb-4 px-6 h-full min-h-0 justify-evenly">
+        <h1 className="text-[20px] font-black text-center tracking-wide text-gray-900 uppercase shrink-0">
             {title || "BASIC INFORMATION"}
         </h1>
-        <p className="text-[17px] font-medium text-stone-700 text-center mb-8 px-4 leading-relaxed shrink-0">
+        <p className="text-[17px] font-medium text-stone-700 text-center px-4 leading-relaxed shrink-0">
             {question}
         </p>
-        <div className="w-full max-w-sm mx-auto flex-1 flex flex-col justify-start min-h-0 overflow-y-auto px-1 pt-1 pb-4">
+        <div className="w-full max-w-sm mx-auto flex flex-col justify-center shrink-0">
             {children}
         </div>
-        <ContinueButton onClick={onNext} disabled={!isValid} />
+        <div className="shrink-0">
+            <ContinueButton onClick={onNext} disabled={!isValid} />
+        </div>
     </div>
 );
 
@@ -294,6 +296,11 @@ export default function OnboardingPage() {
     // Keyboard handlers
     const handleNumInput = (key: string) => {
         setFormData(prev => ({ ...prev, [activeNumField]: prev[activeNumField] + key }));
+        
+        // Auto-advance to inches when 1 digit is entered in feet
+        if (step === 3 && activeNumField === 'heightPrimary' && formData.heightUnit === 'ft/in' && formData.heightPrimary.length === 0) {
+            setActiveNumField('heightSecondary');
+        }
     };
 
     const blockInvalidAgeChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -339,10 +346,10 @@ export default function OnboardingPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="flex-1 flex flex-col items-center justify-center pb-4 pt-10 min-h-0 w-full"
+                            className="flex-1 flex flex-col items-center justify-center pb-4 pt-4 min-h-0 w-full"
                         >
-                            <div className="mb-4">
-                                <img src="/logo.png" alt="Fit & Fun Logo" className="w-[100px] h-[100px] object-contain drop-shadow-sm" />
+                            <div className="mb-2">
+                                <img src="/logo.png" alt="Fit & Fun Logo" className="w-[60px] h-[60px] object-contain drop-shadow-sm" />
                             </div>
                             <h1 className="text-[28px] font-black text-center tracking-wide text-gray-900 mb-2 uppercase">
                                 Welcome to<br/>Fit & Fun
@@ -541,9 +548,9 @@ export default function OnboardingPage() {
                     )}
 
                     {step === 7 && (
-                        <motion.div key="step7" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center pb-4 pt-10 min-h-0 w-full">
-                            <div className="mb-4">
-                                <img src="/logo.png" alt="Fit & Fun Logo" className="w-[100px] h-[100px] object-contain drop-shadow-sm" />
+                        <motion.div key="step7" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center pb-4 pt-4 min-h-0 w-full">
+                            <div className="mb-2">
+                                <img src="/logo.png" alt="Fit & Fun Logo" className="w-[60px] h-[60px] object-contain drop-shadow-sm" />
                             </div>
                             <h1 className="text-[28px] font-black text-center tracking-wide text-gray-900 mb-2 uppercase">You're All Set!</h1>
                             
