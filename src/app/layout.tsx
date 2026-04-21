@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#FFFDF7] flex justify-center h-screen overflow-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#FFFDF7] flex justify-center h-[100dvh] overflow-hidden`}
       >
         <div className="w-full max-w-md bg-[#FFFDF7] h-full max-h-[100dvh] shadow-xl relative overflow-hidden flex flex-col">
           <StatusBar />
