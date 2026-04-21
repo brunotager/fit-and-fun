@@ -350,7 +350,7 @@ export default function OnboardingPage() {
                             
                             <div className="relative flex flex-col items-center w-full max-w-md mx-auto px-4 mt-4">
                                 <SVGBubble text={<>Let's start your<br/>journey to well-being!</>} />
-                                <div className="relative w-[400px] h-[400px] -mt-10 -mb-8 z-10 max-w-[110vw]">
+                                <div className="relative w-[400px] flex-1 min-h-[150px] max-h-[40vh] -mt-10 -mb-8 z-10 max-w-[110vw]">
                                     <img src="/gabi-celebrate-v2.png" alt="Coach Gabi" className="w-full h-full object-contain drop-shadow-lg" />
                                 </div>
                                 <ContinueButton onClick={handleNext} text="Get started!" />
@@ -550,7 +550,7 @@ export default function OnboardingPage() {
                             
                             <div className="relative flex flex-col items-center w-full max-w-md mx-auto px-4 mt-4">
                                 <SVGBubble text={<>Based on your <strong className="text-brand-600 font-black">{formData.activityLevel}</strong> lifestyle, we generated a <strong className="text-brand-600 font-black">{formData.fitnessGoal}</strong> journey.</>} />
-                                <div className="relative w-[400px] h-[400px] -mt-10 -mb-8 z-10 max-w-[110vw]">
+                                <div className="relative w-[400px] flex-1 min-h-[150px] max-h-[40vh] -mt-10 -mb-8 z-10 max-w-[110vw]">
                                     <img src="/gabi-celebrate-v2.png" alt="Coach Gabi" className="w-full h-full object-contain drop-shadow-lg" />
                                 </div>
                                 <ContinueButton onClick={completeSetup} text="Start My Journey" />
