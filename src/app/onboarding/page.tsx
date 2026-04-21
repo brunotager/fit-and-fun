@@ -31,7 +31,7 @@ const ProgressBar = ({ step }: { step: number }) => {
     // We calculate based on total inputs
     const progress = Math.max(0, step) / (TOTAL_STEPS - 1) * 100;
     return (
-        <div className="w-full px-6 mb-6 mt-2 shrink-0">
+        <div className="w-full px-6 mb-2 mt-2 shrink-0">
             <div className="w-full h-3 bg-stone-200 rounded-full relative overflow-hidden">
                 <div
                     className="absolute top-0 left-0 h-full bg-[#5DAA52] transition-all duration-500 ease-out rounded-full shadow-sm"
@@ -74,17 +74,17 @@ const ContinueButton = ({ onClick, disabled, text = "Continue" }: { onClick: () 
 );
 
 const InputScreen = ({ title, question, children, onNext, isValid }: { title?: string, question: string, children: React.ReactNode, onNext: () => void, isValid: boolean }) => (
-    <div className="flex-1 flex flex-col pt-2 pb-4 px-6 h-full min-h-0 justify-evenly">
+    <div className="flex-1 flex flex-col pt-2 pb-4 px-6 h-full min-h-0">
         <h1 className="text-[20px] font-black text-center tracking-wide text-gray-900 uppercase shrink-0">
             {title || "BASIC INFORMATION"}
         </h1>
-        <p className="text-[17px] font-medium text-stone-700 text-center px-4 leading-relaxed shrink-0">
+        <p className="text-[17px] font-medium text-stone-700 text-center px-4 leading-relaxed shrink-0 mt-3">
             {question}
         </p>
-        <div className="w-full max-w-sm mx-auto flex flex-col justify-center shrink-0">
+        <div className="w-full max-w-sm mx-auto flex flex-col justify-center shrink-0 my-auto py-6">
             {children}
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 mt-auto">
             <ContinueButton onClick={onNext} disabled={!isValid} />
         </div>
     </div>
