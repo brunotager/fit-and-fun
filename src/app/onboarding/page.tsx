@@ -564,6 +564,7 @@ export default function OnboardingPage() {
                             </div>
                         </motion.div>
                     )}
+                </AnimatePresence>
                 <div className="shrink-0 w-full h-8" />
             </div>
         </div>
