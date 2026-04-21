@@ -339,7 +339,7 @@ export default function OnboardingPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="flex-1 flex flex-col items-center justify-center pb-4 pt-10"
+                            className="flex-1 flex flex-col items-center justify-center pb-4 pt-10 min-h-0 w-full"
                         >
                             <div className="mb-4">
                                 <img src="/logo.png" alt="Fit & Fun Logo" className="w-[100px] h-[100px] object-contain drop-shadow-sm" />
@@ -348,9 +348,9 @@ export default function OnboardingPage() {
                                 Welcome to<br/>Fit & Fun
                             </h1>
                             
-                            <div className="relative flex flex-col items-center w-full max-w-md mx-auto px-4 mt-4">
+                            <div className="relative flex flex-col items-center w-full max-w-md mx-auto px-4 mt-4 flex-1 min-h-0">
                                 <SVGBubble text={<>Let's start your<br/>journey to well-being!</>} />
-                                <div className="relative w-[400px] flex-1 min-h-[150px] max-h-[40vh] -mt-10 -mb-8 z-10 max-w-[110vw]">
+                                <div className="relative w-[400px] flex-1 min-h-[50px] -mt-10 -mb-8 z-10 max-w-[110vw] shrink">
                                     <img src="/gabi-celebrate-v2.png" alt="Coach Gabi" className="w-full h-full object-contain drop-shadow-lg" />
                                 </div>
                                 <ContinueButton onClick={handleNext} text="Get started!" />
@@ -362,7 +362,7 @@ export default function OnboardingPage() {
                     )}
 
                     {step === 1 && (
-                        <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1">
+                        <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 w-full">
                             <InputScreen title="Let's Personalize" question="First things first. What should I call you?" onNext={handleNext} isValid={isStepValid()}>
                                 <input
                                     type="text"
@@ -377,12 +377,12 @@ export default function OnboardingPage() {
                     )}
 
                     {step === 2 && (
-                        <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col px-4 pb-4">
+                        <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col px-4 pb-4 min-h-0 w-full">
                             <h1 className="text-[20px] font-black text-center tracking-wide text-gray-900 mt-4 mb-2 uppercase">BASIC INFORMATION</h1>
-                            <div className="relative flex flex-col items-center w-full max-w-md mx-auto mt-2 h-full justify-between">
+                            <div className="relative flex flex-col items-center w-full max-w-md mx-auto mt-2 h-full justify-between flex-1 min-h-0">
                                 <div className="flex flex-col items-center relative z-20 flex-1 min-h-0 justify-center">
                                     <SVGBubble text={<>Great! Let's get some basic<br/>information so we can create a<br/>personal workout plan for you.</>} />
-                                    <div className="relative w-full max-w-[360px] flex-1 min-h-[160px] -mt-8 -mb-4 z-10 shrink min-h-0">
+                                    <div className="relative w-full max-w-[360px] flex-1 min-h-[100px] -mt-8 -mb-4 z-10 shrink min-h-0">
                                         <img src="/gabi-wave-right-v2.png" alt="Coach Gabi" className="w-full h-full object-contain drop-shadow-lg" />
                                     </div>
                                 </div>
@@ -392,7 +392,7 @@ export default function OnboardingPage() {
                     )}
 
                     {step === 3 && (
-                        <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1">
+                        <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 w-full">
                             <InputScreen question="What is your height?" onNext={handleNext} isValid={isStepValid()}>
                                 <div className="flex bg-stone-100 rounded-full p-2 relative shadow-inner mb-6 mx-auto w-full max-w-[200px]">
                                     {['ft/in', 'm/cm'].map(unit => (
@@ -455,7 +455,7 @@ export default function OnboardingPage() {
                     )}
 
                     {step === 4 && (
-                        <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1">
+                        <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 w-full">
                             <InputScreen question="What is your weight?" onNext={handleNext} isValid={isStepValid()}>
                                 <div className="flex bg-stone-100 rounded-full p-2 relative shadow-inner mb-6 mx-auto w-full max-w-[200px]">
                                     {['lbs', 'kg'].map(unit => (
@@ -493,7 +493,7 @@ export default function OnboardingPage() {
                     )}
 
                     {step === 5 && (
-                        <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1">
+                        <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 w-full">
                             <InputScreen question="What is your daily activity level?" onNext={handleNext} isValid={isStepValid()}>
                                 <div className="flex flex-col gap-3">
                                     {[
@@ -520,7 +520,7 @@ export default function OnboardingPage() {
                     )}
 
                     {step === 6 && (
-                        <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1">
+                        <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 w-full">
                             <InputScreen title="FITNESS GOAL" question="What is your primary goal?" onNext={handleNext} isValid={isStepValid()}>
                                 <div className="flex flex-col gap-3">
                                     {['Weight loss', 'Muscle gain', 'Maintain weight'].map(opt => (
@@ -540,17 +540,16 @@ export default function OnboardingPage() {
                         </motion.div>
                     )}
 
-                    {/* STEP 7: Success */}
                     {step === 7 && (
-                        <motion.div key="step7" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center pb-4 pt-10">
+                        <motion.div key="step7" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center pb-4 pt-10 min-h-0 w-full">
                             <div className="mb-4">
                                 <img src="/logo.png" alt="Fit & Fun Logo" className="w-[100px] h-[100px] object-contain drop-shadow-sm" />
                             </div>
                             <h1 className="text-[28px] font-black text-center tracking-wide text-gray-900 mb-2 uppercase">You're All Set!</h1>
                             
-                            <div className="relative flex flex-col items-center w-full max-w-md mx-auto px-4 mt-4">
+                            <div className="relative flex flex-col items-center w-full max-w-md mx-auto px-4 mt-4 flex-1 min-h-0">
                                 <SVGBubble text={<>Based on your <strong className="text-brand-600 font-black">{formData.activityLevel}</strong> lifestyle, we generated a <strong className="text-brand-600 font-black">{formData.fitnessGoal}</strong> journey.</>} />
-                                <div className="relative w-[400px] flex-1 min-h-[150px] max-h-[40vh] -mt-10 -mb-8 z-10 max-w-[110vw]">
+                                <div className="relative w-[400px] flex-1 min-h-[50px] -mt-10 -mb-8 z-10 max-w-[110vw] shrink">
                                     <img src="/gabi-celebrate-v2.png" alt="Coach Gabi" className="w-full h-full object-contain drop-shadow-lg" />
                                 </div>
                                 <ContinueButton onClick={completeSetup} text="Start My Journey" />
