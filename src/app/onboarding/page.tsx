@@ -561,7 +561,7 @@ export default function OnboardingPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                {[1, 3, 4].includes(step) ? (
+                {[3, 4].includes(step) ? (
                     <div className="shrink-0 w-full h-[260px]" />
                 ) : (
                     <div className="shrink-0 w-full h-8" />
@@ -569,7 +569,6 @@ export default function OnboardingPage() {
             </div>
 
             {/* Custom iOS Keypads */}
-            {step === 1 && <IOSAlphabeticKeyboard onKeyPress={handleAlphaInput('name')} onDelete={handleAlphaDelete('name')} onSpace={handleAlphaSpace('name')} onReturn={handleNext} />}
             {step === 3 && <IOSKeyboard onKeyPress={handleNumInput} onDelete={handleNumDelete} />}
             {step === 4 && <IOSKeyboard onKeyPress={handleNumInput} onDelete={handleNumDelete} />}
         </div>
