@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fit & Fun
 
-## Getting Started
+Fit & Fun is a frictionless, gamified 7-day guided fitness journey built with a focus on high-trust UX and maintaining user engagement. 
+
+Designed to remove barriers to entry, the app features minimal onboarding, quick workouts capped at 10 minutes, and a dynamic visual progress map to keep you motivated throughout your week.
+
+## 🌟 Key Features
+
+- **Gamified 7-Day Journey:** A structured path to build consistency and momentum.
+- **Frictionless Onboarding:** Jump straight into the action without unnecessary data collection (no age or gender requirements).
+- **Interactive Progress Map:** An engaging SVG-based roadmap with animated paths and interactive nodes to track your daily completions.
+- **Bite-Sized Workouts:** All sessions are capped at 10 minutes or less to ensure they easily fit into any schedule.
+- **High-Trust UX:** Clean design, dynamic messaging, and smooth transitions that inspire confidence and keep you engaged.
+- **Settings & Progression Control:** Manage your journey, connect devices, or easily reset your plan when you need a fresh start.
+
+## 🛠 Tech Stack
+
+- [Next.js](https://nextjs.org/) (App Router)
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/) for rapid UI styling
+- [Lucide React](https://lucide.dev/) for iconography
+
+## 🚀 Getting Started
 
 First, run the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📂 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/app/`: Next.js App Router pages (Home, Onboarding, Progress, Workouts, Settings, Profile).
+- `src/components/`: Reusable UI components including interactive modals, headers, and navigation.
+- `src/context/`: React context (`FitFunContext`) for global state management (progress, workouts completed, user details).
+- `src/lib/`: Core utilities and logic, including the `planEngine` for workout generation.
+- `src/hooks/`: Custom React hooks like `useWorkoutLogic` for managing workout states.
 
-## Learn More
+## 🤝 Contributing
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Contributions are always welcome! Feel free to open an issue or submit a pull request if you have ideas for new features or improvements.
