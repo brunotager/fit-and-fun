@@ -53,14 +53,14 @@ export default function AdminDashboard() {
 
   if (loading && !data) {
     return (
-      <div className="min-h-screen bg-[#F4F4F5] flex items-center justify-center">
+      <div className="fixed inset-0 z-50 bg-[#F4F4F5] flex items-center justify-center">
         <div className="animate-spin text-brand-500"><RefreshCcw size={32} /></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F4F5] pb-10">
+    <div className="fixed inset-0 z-50 bg-[#F4F4F5] overflow-y-auto pb-10">
       {/* Header */}
       <div className="bg-white px-6 py-4 shadow-sm flex justify-between items-center sticky top-0 z-10">
         <div className="flex items-center gap-3">

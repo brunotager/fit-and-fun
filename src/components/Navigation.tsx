@@ -15,10 +15,10 @@ export const Navigation = () => {
         { label: 'Progress', href: '/progress', icon: Trophy },
     ];
 
-    // Don't show nav on onboarding or welcome or workout active
     const hiddenRoutes = ['/', '/onboarding'];
     const isWorkoutActive = pathname.startsWith('/workout/');
-    if (hiddenRoutes.includes(pathname) || isWorkoutActive) return null;
+    const isAdmin = pathname.startsWith('/admin');
+    if (hiddenRoutes.includes(pathname) || isWorkoutActive || isAdmin) return null;
 
     return (
         <nav className="mt-auto bg-white border-t border-gray-100">

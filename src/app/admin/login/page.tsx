@@ -21,7 +21,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF7] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-[#FFFDF7] flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-stone-100">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase mb-2">Admin Portal</h1>
         <p className="text-stone-500 text-sm mb-8 font-medium">Enter your secret code to view analytics.</p>
