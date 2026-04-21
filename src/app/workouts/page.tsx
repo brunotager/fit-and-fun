@@ -119,7 +119,7 @@ export default function WorkoutsPage() {
     if (!todayWorkout) return null; // Safe fallback
 
     return (
-        <div className="flex-1 flex flex-col bg-[#FFFDF7] overflow-y-auto custom-scrollbar animate-in fade-in duration-700 pb-10">
+        <div className="flex-1 flex flex-col bg-[#FFFDF7] overflow-y-auto custom-scrollbar animate-in fade-in duration-700 pb-10 min-h-0">
             <Header title="Your Personal Plan" />
 
             <div className="flex-1 flex flex-col px-6 mt-6 relative">

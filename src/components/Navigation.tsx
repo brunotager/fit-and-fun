@@ -21,7 +21,7 @@ export const Navigation = () => {
     if (hiddenRoutes.includes(pathname) || isWorkoutActive || isAdmin) return null;
 
     return (
-        <nav className="mt-auto bg-white border-t border-gray-100">
+        <nav className="mt-auto bg-white border-t border-gray-100 shrink-0">
             <div className="flex justify-around items-center h-16">
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.href;

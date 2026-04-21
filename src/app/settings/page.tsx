@@ -38,7 +38,7 @@ export default function SettingsPage() {
     );
 
     return (
-        <div className="flex-1 flex flex-col bg-white overflow-y-auto pb-10">
+        <div className="flex-1 flex flex-col bg-white overflow-y-auto pb-10 min-h-0">
             <Header showBack title="Settings" />
 
             {/* Logo area */}

@@ -141,7 +141,7 @@ export default function ProfilePage() {
     };
 
     return (
-        <div className="flex-1 flex flex-col bg-[#FFFDF7] overflow-y-auto custom-scrollbar pb-10">
+        <div className="flex-1 flex flex-col bg-[#FFFDF7] overflow-y-auto custom-scrollbar pb-10 min-h-0">
             <Header showBack title="My Profile" />
 
             {/* Profile Avatar Section */}
