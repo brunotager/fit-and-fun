@@ -425,31 +425,34 @@ export default function OnboardingPage() {
                                     <div className="flex-1 relative">
                                         <input
                                             type="number"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
                                             placeholder={formData.heightUnit === 'ft/in' ? 'ft' : 'm'}
-                                            className={clsx(
-                                                "w-full p-4 rounded-[20px] bg-stone-100/80 text-center text-xl font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 transition-colors",
-                                                activeNumField === 'heightPrimary' ? "border-brand-500 bg-white" : "border-stone-200"
-                                            )}
+                                            className="w-full p-4 rounded-[20px] bg-white text-center text-xl font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
                                             value={formData.heightPrimary}
-                                            onChange={(e) => setFormData({ ...formData, heightPrimary: e.target.value })}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setFormData({ ...formData, heightPrimary: val });
+                                                if (formData.heightUnit === 'ft/in' && val.length >= 1) {
+                                                    document.getElementById('heightSecondaryInput')?.focus();
+                                                }
+                                            }}
                                             onKeyDown={blockInvalidAgeChars}
-                                            onFocus={() => setActiveNumField('heightPrimary')}
                                             autoFocus
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 font-medium">{formData.heightUnit === 'ft/in' ? 'ft' : 'm'}</span>
                                     </div>
                                     <div className="flex-1 relative">
                                         <input
+                                            id="heightSecondaryInput"
                                             type="number"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
                                             placeholder={formData.heightUnit === 'ft/in' ? 'in' : 'cm'}
-                                            className={clsx(
-                                                "w-full p-4 rounded-[20px] bg-stone-100/80 text-center text-xl font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 transition-colors",
-                                                activeNumField === 'heightSecondary' ? "border-brand-500 bg-white" : "border-stone-200"
-                                            )}
+                                            className="w-full p-4 rounded-[20px] bg-white text-center text-xl font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
                                             value={formData.heightSecondary}
                                             onChange={(e) => setFormData({ ...formData, heightSecondary: e.target.value })}
                                             onKeyDown={blockInvalidAgeChars}
-                                            onFocus={() => setActiveNumField('heightSecondary')}
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 font-medium">{formData.heightUnit === 'ft/in' ? 'in' : 'cm'}</span>
                                     </div>
@@ -485,11 +488,12 @@ export default function OnboardingPage() {
                                 </div>
                                 <input
                                     type="number"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     placeholder={`Enter ${formData.weightUnit}`}
                                     className="w-full p-4 rounded-full bg-stone-100/80 text-center text-lg font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
                                     value={formData.weightNum}
                                     onChange={(e) => setFormData({ ...formData, weightNum: e.target.value })}
-                                    onFocus={() => setActiveNumField('weightNum')}
                                     autoFocus
                                 />
                             </InputScreen>
@@ -560,17 +564,8 @@ export default function OnboardingPage() {
                             </div>
                         </motion.div>
                     )}
-                </AnimatePresence>
-                {[3, 4].includes(step) ? (
-                    <div className="shrink-0 w-full h-[260px]" />
-                ) : (
-                    <div className="shrink-0 w-full h-8" />
-                )}
+                <div className="shrink-0 w-full h-8" />
             </div>
-
-            {/* Custom iOS Keypads */}
-            {step === 3 && <IOSKeyboard onKeyPress={handleNumInput} onDelete={handleNumDelete} />}
-            {step === 4 && <IOSKeyboard onKeyPress={handleNumInput} onDelete={handleNumDelete} />}
         </div>
     );
 }
