@@ -74,14 +74,14 @@ const ContinueButton = ({ onClick, disabled, text = "Continue" }: { onClick: () 
 );
 
 const InputScreen = ({ title, question, children, onNext, isValid }: { title?: string, question: string, children: React.ReactNode, onNext: () => void, isValid: boolean }) => (
-    <div className="flex-1 flex flex-col pt-2 pb-4 px-6 h-full min-h-0">
+    <div className="flex-1 flex flex-col pt-2 pb-4 px-6 w-full min-h-0">
         <h1 className="text-[20px] font-black text-center tracking-wide text-gray-900 uppercase shrink-0">
             {title || "BASIC INFORMATION"}
         </h1>
         <p className="text-[17px] font-medium text-stone-700 text-center px-4 leading-relaxed shrink-0 mt-3">
             {question}
         </p>
-        <div className="w-full max-w-sm mx-auto flex flex-col justify-center shrink-0 my-auto py-6">
+        <div className="w-full max-w-sm mx-auto flex flex-col justify-center my-auto py-2 min-h-0 flex-shrink">
             {children}
         </div>
         <div className="shrink-0 mt-auto">
@@ -335,10 +335,7 @@ export default function OnboardingPage() {
             {step > 0 && step < 7 && <OnboardingHeader onBack={handleBack} onSkip={handleSkip} />}
             {step > 0 && step !== 2 && step < 7 && <ProgressBar step={step} />}
             
-            <div className={clsx(
-                "flex-1 overflow-y-auto overflow-x-hidden flex flex-col relative",
-                [1, 3, 4].includes(step) ? "pb-[260px]" : "pb-8"
-            )}>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col relative">
                 <AnimatePresence mode="wait">
                     {step === 0 && (
                         <motion.div
@@ -386,7 +383,7 @@ export default function OnboardingPage() {
                     {step === 2 && (
                         <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col px-4 pb-4 min-h-0 w-full">
                             <h1 className="text-[20px] font-black text-center tracking-wide text-gray-900 mt-4 mb-2 uppercase">BASIC INFORMATION</h1>
-                            <div className="relative flex flex-col items-center w-full max-w-md mx-auto mt-2 h-full justify-between flex-1 min-h-0">
+                            <div className="relative flex flex-col items-center w-full max-w-md mx-auto mt-2 justify-between flex-1 min-h-0">
                                 <div className="flex flex-col items-center relative z-20 flex-1 min-h-0 justify-center">
                                     <SVGBubble text={<>Great! Let's get some basic<br/>information so we can create a<br/>personal workout plan for you.</>} />
                                     <div className="relative w-full max-w-[360px] flex-1 min-h-[100px] -mt-8 -mb-4 z-10 shrink min-h-0">
@@ -513,7 +510,7 @@ export default function OnboardingPage() {
                                             key={level.id}
                                             onClick={() => setFormData({ ...formData, activityLevel: level.id as ActivityLevel })}
                                             className={clsx(
-                                                "w-full py-4 px-6 rounded-3xl text-left transition-all duration-200 border-2",
+                                                "w-full rounded-2xl p-3 text-left transition-all duration-200 border-2",
                                                 formData.activityLevel === level.id ? "bg-brand-50 border-brand-500" : "bg-white border-stone-200 hover:border-stone-300"
                                             )}
                                         >
@@ -535,7 +532,7 @@ export default function OnboardingPage() {
                                             key={opt}
                                             onClick={() => setFormData({ ...formData, fitnessGoal: opt as FitnessGoal })}
                                             className={clsx(
-                                                "w-full py-4 px-6 rounded-full font-bold text-[16px] transition-all duration-200 border-2",
+                                                "w-full py-3 px-4 rounded-full font-bold text-[16px] transition-all duration-200 border-2",
                                                 formData.fitnessGoal === opt ? "bg-brand-50 border-brand-500 text-brand-600" : "bg-white border-stone-200 text-stone-800 hover:border-stone-300"
                                             )}
                                         >
@@ -564,6 +561,11 @@ export default function OnboardingPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
+                {[1, 3, 4].includes(step) ? (
+                    <div className="shrink-0 w-full h-[260px]" />
+                ) : (
+                    <div className="shrink-0 w-full h-8" />
+                )}
             </div>
 
             {/* Custom iOS Keypads */}

@@ -46,7 +46,7 @@ export default function ProgressPage() {
     });
 
     const avatarTop = useTransform(pathProgress, (p) => {
-        if (!pathRef.current || pathLength === 0) return "86.6%"; // Fallback roughly near path start
+        if (!pathRef.current || pathLength === 0) return "93.3%"; // Fallback roughly near path start
         const point = pathRef.current.getPointAtLength(p * pathLength);
         return `${(point.y / 600) * 100}%`;
     });
@@ -70,7 +70,7 @@ export default function ProgressPage() {
                     {/* SVG Path Container */}
                     <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 400 600" preserveAspectRatio="none">
                         <path
-                            d="M 200 520 C 350 450, 350 400, 300 350 S 50 300, 100 250 S 350 200, 300 150 S 150 100, 200 50"
+                            d="M 200 560 C 350 490, 350 400, 300 350 S 50 300, 100 250 S 350 200, 300 150 S 150 100, 200 50"
                             fill="none"
                             stroke="#e5e7eb"
                             strokeWidth="8"
@@ -78,7 +78,7 @@ export default function ProgressPage() {
                         />
                         <motion.path
                             ref={pathRef}
-                            d="M 200 520 C 350 450, 350 400, 300 350 S 50 300, 100 250 S 350 200, 300 150 S 150 100, 200 50"
+                            d="M 200 560 C 350 490, 350 400, 300 350 S 50 300, 100 250 S 350 200, 300 150 S 150 100, 200 50"
                             fill="none"
                             stroke="#EA580C"
                             strokeWidth="8"
