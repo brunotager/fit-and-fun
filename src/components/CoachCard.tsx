@@ -32,7 +32,7 @@ export function CoachCard({ state, seamless = false, messageOverride }: CoachCar
                 <h2 className="text-xl font-bold text-gray-700 uppercase tracking-tight mb-2 w-full leading-tight shrink-0 opacity-80">
                     "{message}"
                 </h2>
-                <div className="relative w-[340px] h-[400px] max-h-[50vh] min-h-[300px] max-w-full hover:scale-105 transition-transform duration-500 ease-out shrink-1">
+                <div className="relative w-[340px] flex-1 min-h-[200px] max-h-[45vh] max-w-full hover:scale-105 transition-transform duration-500 ease-out shrink">
                     <Image
                         src={image}
                         alt="Coach Gabi"

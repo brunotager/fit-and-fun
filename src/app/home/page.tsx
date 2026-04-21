@@ -20,7 +20,7 @@ export default function HomePage() {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col items-center justify-center relative pb-8 px-6">
                 {/* Coach Display (Seamless Mode) */}
-                <div className="flex-1 flex items-center justify-center w-full">
+                <div className="flex-1 flex items-center justify-center w-full min-h-0">
                     <CoachCard state={progress} seamless messageOverride="Self-care is not selfish" />
                 </div>
 
