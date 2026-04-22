@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 import { Navigation } from "@/components/Navigation";
+import { ViewportFix } from "@/components/ViewportFix";
 import { StatusBar } from "@/components/StatusBar";
 
 export default function RootLayout({
@@ -36,7 +37,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#FFFDF7] flex justify-center fixed inset-0 overflow-hidden`}
       >
-        <div className="w-full max-w-md bg-[#FFFDF7] h-full shadow-xl relative overflow-hidden flex flex-col">
+        <ViewportFix />
+        <div 
+          className="w-full max-w-md bg-[#FFFDF7] shadow-xl relative overflow-hidden flex flex-col"
+          style={{ height: 'var(--vv-height, 100dvh)', top: 'var(--vv-offset-top, 0px)' }}
+        >
           <StatusBar />
           <Providers>
             <main className="flex-1 flex flex-col relative overflow-y-auto custom-scrollbar min-h-0">
