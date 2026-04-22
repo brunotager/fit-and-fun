@@ -433,9 +433,6 @@ export default function OnboardingPage() {
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 setFormData({ ...formData, heightPrimary: val });
-                                                if (formData.heightUnit === 'ft/in' && val.length >= 1) {
-                                                    document.getElementById('heightSecondaryInput')?.focus();
-                                                }
                                             }}
                                             onKeyDown={blockInvalidAgeChars}
                                             autoFocus
