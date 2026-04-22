@@ -63,7 +63,7 @@ const ContinueButton = ({ onClick, disabled, text = "Continue" }: { onClick: () 
         onClick={onClick}
         disabled={disabled}
         className={clsx(
-            "w-full max-w-[320px] rounded-[24px] py-4 font-bold text-[19px] z-20 relative transition-all duration-300 mx-auto block shrink-0",
+            "w-full max-w-[320px] rounded-[24px] py-3 font-bold text-[17px] z-20 relative transition-all duration-300 mx-auto block shrink-0",
             disabled 
                 ? "bg-stone-300 text-white shadow-none cursor-not-allowed" 
                 : "bg-[#E56B25] text-white shadow-lg shadow-brand-500/20 active:scale-95"
@@ -74,14 +74,14 @@ const ContinueButton = ({ onClick, disabled, text = "Continue" }: { onClick: () 
 );
 
 const InputScreen = ({ title, question, children, onNext, isValid }: { title?: string, question: string, children: React.ReactNode, onNext: () => void, isValid: boolean }) => (
-    <div className="flex-1 flex flex-col pt-2 pb-4 px-6 w-full min-h-0">
+    <div className="flex-1 flex flex-col pt-1 pb-2 px-6 w-full min-h-0">
         <h1 className="text-[20px] font-black text-center tracking-wide text-gray-900 uppercase shrink-0">
             {title || "BASIC INFORMATION"}
         </h1>
-        <p className="text-[17px] font-medium text-stone-700 text-center px-4 leading-relaxed shrink-0 mt-3">
+        <p className="text-[17px] font-medium text-stone-700 text-center px-4 leading-relaxed shrink-0 mt-1">
             {question}
         </p>
-        <div className="w-full max-w-sm mx-auto flex flex-col justify-center my-auto py-2 min-h-0 flex-shrink">
+        <div className="w-full max-w-sm mx-auto flex flex-col justify-center my-auto py-1 min-h-0 flex-shrink">
             {children}
         </div>
         <div className="shrink-0 mt-auto">
@@ -371,7 +371,7 @@ export default function OnboardingPage() {
                                 <input
                                     type="text"
                                     placeholder="Enter your name"
-                                    className="w-full p-4 rounded-full bg-stone-100/80 text-center text-lg font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
+                                    className="w-full p-3 rounded-full bg-stone-100/80 text-center text-lg font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     autoFocus
@@ -398,7 +398,7 @@ export default function OnboardingPage() {
                     {step === 3 && (
                         <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 w-full">
                             <InputScreen question="What is your height?" onNext={handleNext} isValid={isStepValid()}>
-                                <div className="flex bg-stone-100 rounded-full p-2 relative shadow-inner mb-6 mx-auto w-full max-w-[200px]">
+                                <div className="flex bg-stone-100 rounded-full p-1.5 relative shadow-inner mb-3 mx-auto w-full max-w-[200px]">
                                     {['ft/in', 'm/cm'].map(unit => (
                                         <button
                                             key={unit}
@@ -428,7 +428,7 @@ export default function OnboardingPage() {
                                             inputMode="numeric"
                                             pattern="[0-9]*"
                                             placeholder={formData.heightUnit === 'ft/in' ? 'ft' : 'm'}
-                                            className="w-full p-4 rounded-[20px] bg-white text-center text-xl font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
+                                            className="w-full p-3 rounded-[20px] bg-white text-center text-xl font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
                                             value={formData.heightPrimary}
                                             onChange={(e) => {
                                                 const val = e.target.value;
@@ -449,7 +449,7 @@ export default function OnboardingPage() {
                                             inputMode="numeric"
                                             pattern="[0-9]*"
                                             placeholder={formData.heightUnit === 'ft/in' ? 'in' : 'cm'}
-                                            className="w-full p-4 rounded-[20px] bg-white text-center text-xl font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
+                                            className="w-full p-3 rounded-[20px] bg-white text-center text-xl font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
                                             value={formData.heightSecondary}
                                             onChange={(e) => setFormData({ ...formData, heightSecondary: e.target.value })}
                                             onKeyDown={blockInvalidAgeChars}
@@ -464,7 +464,7 @@ export default function OnboardingPage() {
                     {step === 4 && (
                         <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 w-full">
                             <InputScreen question="What is your weight?" onNext={handleNext} isValid={isStepValid()}>
-                                <div className="flex bg-stone-100 rounded-full p-2 relative shadow-inner mb-6 mx-auto w-full max-w-[200px]">
+                                <div className="flex bg-stone-100 rounded-full p-1.5 relative shadow-inner mb-3 mx-auto w-full max-w-[200px]">
                                     {['lbs', 'kg'].map(unit => (
                                         <button
                                             key={unit}
@@ -491,7 +491,7 @@ export default function OnboardingPage() {
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                     placeholder={`Enter ${formData.weightUnit}`}
-                                    className="w-full p-4 rounded-full bg-stone-100/80 text-center text-lg font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
+                                    className="w-full p-3 rounded-full bg-stone-100/80 text-center text-lg font-bold text-stone-800 placeholder-stone-400 focus:outline-none border-2 border-stone-200 focus:border-brand-500 transition-colors"
                                     value={formData.weightNum}
                                     onChange={(e) => setFormData({ ...formData, weightNum: e.target.value })}
                                     autoFocus
@@ -565,7 +565,6 @@ export default function OnboardingPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                <div className="shrink-0 w-full h-8" />
             </div>
         </div>
     );
