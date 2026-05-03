@@ -299,8 +299,10 @@ export default function WorkoutActivePage({ params }: PageProps) {
                 layout
                 transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }} 
                 className={clsx(
-                    "bg-white rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-40 flex flex-col w-full mt-auto relative overflow-hidden",
-                    isSheetExpanded ? "flex-1" : "h-[180px]" // Compact height vs Expanded
+                    "bg-white rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.08)] flex flex-col w-full relative overflow-hidden",
+                    isSheetExpanded 
+                        ? "fixed bottom-0 left-0 right-0 z-50 h-[75vh]" 
+                        : "mt-auto z-40 h-[180px]"
                 )}
             >
                 {/* Drag Handle */}
