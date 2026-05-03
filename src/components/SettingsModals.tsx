@@ -85,7 +85,7 @@ export function LogOutModal({ isOpen, onClose, onLogOut }: SharedModalProps & { 
         <ModalWrapper isOpen={isOpen} onClose={onClose}>
             <h3 className="text-xl font-black text-gray-900 mb-2">Log Out?</h3>
             <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-                Are you sure you want to disconnect? Your progress remains saved locally.
+                You'll be taken back to the welcome screen. Your progress stays saved — you can pick up right where you left off.
             </p>
             <div className="flex flex-col gap-3">
                 <button
@@ -93,6 +93,34 @@ export function LogOutModal({ isOpen, onClose, onLogOut }: SharedModalProps & { 
                     className="w-full py-4 font-bold text-white bg-brand-500 rounded-2xl hover:bg-brand-600 shadow-lg shadow-brand-500/20 active:scale-95 transition-transform"
                 >
                     Yes, Log Out
+                </button>
+                <button
+                    onClick={onClose}
+                    className="w-full py-4 font-bold text-gray-500 hover:text-gray-700 active:scale-95 transition-transform"
+                >
+                    Cancel
+                </button>
+            </div>
+        </ModalWrapper>
+    );
+}
+
+export function ResetProgressModal({ isOpen, onClose, onReset }: SharedModalProps & { onReset: () => void }) {
+    return (
+        <ModalWrapper isOpen={isOpen} onClose={onClose}>
+            <h3 className="text-xl font-black text-red-600 mb-2">Reset All Progress?</h3>
+            <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+                This will <span className="font-bold text-red-600">permanently delete</span> all your workout data, badges, and streak. You'll start fresh from Day 1.
+            </p>
+            <p className="text-gray-400 text-xs mb-8 leading-relaxed">
+                Your data will be recoverable for 90 days, then permanently removed.
+            </p>
+            <div className="flex flex-col gap-3">
+                <button
+                    onClick={onReset}
+                    className="w-full py-4 font-bold text-white bg-red-500 rounded-2xl hover:bg-red-600 shadow-lg shadow-red-500/20 active:scale-95 transition-transform"
+                >
+                    Yes, Delete Everything
                 </button>
                 <button
                     onClick={onClose}

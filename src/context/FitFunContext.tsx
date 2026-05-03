@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { updateProgress, checkBadges } from '@/lib/progressEngine';
 import { workouts } from '@/data/workouts';
+import { ToastContainer, ToastMessage } from '@/components/Toast';
 
 // --- Types ---
 
@@ -37,7 +38,7 @@ export interface WorkoutLog {
   points: number;
   calories: number;
   workoutId: string; // e.g. "cardio_5"
-  completionType?: 'timer_finished' | 'manual_end'; // NEW
+  completionType?: 'timer_finished' | 'manual_end';
 }
 
 export interface Progress {
@@ -58,8 +59,11 @@ interface FitFunContextType {
   updateProfile: (data: Partial<Profile>) => void;
   completeWorkout: (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string; completionType?: 'timer_finished' | 'manual_end' }) => void;
   resetProgress: () => void;
+  logOut: () => void; // U3: non-destructive log out
   updateProgressState: (data: Partial<Progress>) => void;
   isLoading: boolean;
+  toasts: ToastMessage[];
+  dismissToast: (id: string) => void;
 }
 
 // --- Constants ---
@@ -93,6 +97,39 @@ export const BADGES = [
   { id: 'balanced_week', name: 'Balanced', description: 'Tried cardio, strength, and mobility.' },
 ];
 
+// --- Retry Queue (E1) ---
+
+interface PendingSync {
+  id: string;
+  url: string;
+  body: object;
+  timestamp: number;
+}
+
+function loadPendingSyncs(): PendingSync[] {
+  try {
+    const raw = localStorage.getItem('fitfun_pending_syncs');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePendingSyncs(syncs: PendingSync[]) {
+  localStorage.setItem('fitfun_pending_syncs', JSON.stringify(syncs));
+}
+
+function addPendingSync(url: string, body: object) {
+  const syncs = loadPendingSyncs();
+  syncs.push({ id: crypto.randomUUID(), url, body, timestamp: Date.now() });
+  savePendingSyncs(syncs);
+}
+
+function removePendingSync(id: string) {
+  const syncs = loadPendingSyncs().filter(s => s.id !== id);
+  savePendingSyncs(syncs);
+}
+
 // --- Context ---
 
 const FitFunContext = createContext<FitFunContextType | undefined>(undefined);
@@ -103,8 +140,71 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<Progress>(INITIAL_PROGRESS);
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Toast helpers
+  const addToast = useCallback((text: string, type: 'error' | 'success' = 'error') => {
+    const id = crypto.randomUUID();
+    setToasts(prev => [...prev.slice(-2), { id, text, type }]); // max 3 visible
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  // Resilient fetch helper (E1) — retries on failure, queues for later
+  const resilientFetch = useCallback(async (url: string, body: object) => {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return true;
+    } catch (err) {
+      console.error(`Sync failed (${url}):`, err);
+      addPendingSync(url, body);
+      addToast('Sync failed — will retry automatically', 'error');
+      return false;
+    }
+  }, [addToast]);
+
+  // Retry pending syncs on mount (E1)
+  useEffect(() => {
+    if (isLoading) return;
+
+    const pending = loadPendingSyncs();
+    if (pending.length === 0) return;
+
+    const retryAll = async () => {
+      let succeeded = 0;
+      for (const sync of pending) {
+        try {
+          const res = await fetch(sync.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sync.body),
+          });
+          if (res.ok) {
+            removePendingSync(sync.id);
+            succeeded++;
+          }
+        } catch {
+          // Still failing — leave in queue
+        }
+      }
+      if (succeeded > 0) {
+        addToast(`Synced ${succeeded} pending update${succeeded > 1 ? 's' : ''}`, 'success');
+      }
+    };
+
+    retryAll();
+  }, [isLoading, addToast]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -149,21 +249,17 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
     
     syncTimeoutRef.current = setTimeout(() => {
-      fetch('/api/sync-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: currentUserId,
-          name: currentProfile.name,
-          joinDate: currentProfile.joinDate,
-          goalType: currentProfile.goalType,
-          fitnessGoal: currentProfile.fitnessGoal,
-          activityLevel: currentProfile.activityLevel,
-          lastActiveDay: currentProgress.currentPlanDay,
-        })
-      }).catch(err => console.error("Sync user error:", err));
+      resilientFetch('/api/sync-user', {
+        id: currentUserId,
+        name: currentProfile.name,
+        joinDate: currentProfile.joinDate,
+        goalType: currentProfile.goalType,
+        fitnessGoal: currentProfile.fitnessGoal,
+        activityLevel: currentProfile.activityLevel,
+        lastActiveDay: currentProgress.currentPlanDay,
+      });
     }, 1500);
-  }, []);
+  }, [resilientFetch]);
 
   // Watch for profile/progress changes to sync
   useEffect(() => {
@@ -181,40 +277,50 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
 
   const completeWorkout = (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string; completionType?: 'timer_finished' | 'manual_end' }) => {
     const now = new Date().toISOString();
+    const completionType = data.completionType || 'manual_end';
+
+    // U1: 0 points and 0 calories for manual_end — user must finish the workout to earn rewards
+    const earnedPoints = completionType === 'timer_finished' ? data.points : 0;
+    const earnedCalories = completionType === 'timer_finished' ? data.calories : 0;
 
     const newLog: WorkoutLog = {
       id: crypto.randomUUID(),
       date: now,
       type: data.type,
       duration: data.duration,
-      points: data.points,
-      calories: data.calories,
+      points: earnedPoints,
+      calories: earnedCalories,
       workoutId: data.workoutId,
-      completionType: data.completionType || 'manual_end'
+      completionType: completionType,
     };
     const newLogs = [newLog, ...logs];
     setLogs(newLogs);
 
-    // Sync workout to DB
+    // Sync workout to DB (E1: now with retry)
     if (userId) {
-      fetch('/api/sync-workout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: newLog.id,
-          userId: userId,
-          date: newLog.date,
-          type: newLog.type,
-          duration: newLog.duration,
-          points: newLog.points,
-          completionType: newLog.completionType,
-          workoutId: newLog.workoutId
-        })
-      }).catch(err => console.error("Sync workout error:", err));
+      resilientFetch('/api/sync-workout', {
+        id: newLog.id,
+        userId: userId,
+        date: newLog.date,
+        type: newLog.type,
+        duration: newLog.duration,
+        points: earnedPoints,
+        completionType: newLog.completionType,
+        workoutId: newLog.workoutId,
+      });
     }
 
-    const engineUpdated = updateProgress(progress, newLog);
-    const newPlanDay = engineUpdated.currentPlanDay + 1;
+    const engineUpdated = updateProgress(progress, { ...newLog, points: earnedPoints });
+
+    // D3: Only advance plan day if timer finished AND we haven't already completed today
+    const today = new Date().toISOString().split('T')[0];
+    const alreadyCompletedToday = logs.some(
+      log => log.date.split('T')[0] === today && log.completionType === 'timer_finished'
+    );
+    const newPlanDay = (completionType === 'timer_finished' && !alreadyCompletedToday)
+      ? engineUpdated.currentPlanDay + 1
+      : engineUpdated.currentPlanDay;
+
     const newBadges = checkBadges(engineUpdated, newLogs);
 
     setProgress({
@@ -225,14 +331,34 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const resetProgress = () => {
+  // D1: Deactivate user server-side before clearing local data
+  const resetProgress = async () => {
+    if (userId) {
+      try {
+        await fetch('/api/deactivate-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: userId }),
+        });
+      } catch (err) {
+        console.error('Deactivate user error:', err);
+      }
+    }
+
     setProfile(INITIAL_PROFILE);
     setProgress(INITIAL_PROGRESS);
     setLogs([]);
     localStorage.removeItem('fitfun_profile');
     localStorage.removeItem('fitfun_progress');
     localStorage.removeItem('fitfun_workouts_log');
+    localStorage.removeItem('fitfun_user_id');
+    localStorage.removeItem('fitfun_pending_syncs');
     window.location.href = '/';
+  };
+
+  // U3: Non-destructive log out — preserves data, returns to home
+  const logOut = () => {
+    window.location.href = '/home';
   };
 
   return (
@@ -244,10 +370,14 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
       updateProfile,
       completeWorkout,
       resetProgress,
+      logOut,
       updateProgressState,
-      isLoading
+      isLoading,
+      toasts,
+      dismissToast,
     }}>
       {children}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </FitFunContext.Provider>
   );
 }

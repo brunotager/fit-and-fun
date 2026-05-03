@@ -3,16 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFitFun } from '@/context/FitFunContext';
-import { Flame, Clock, Gift, CheckCircle2 } from 'lucide-react';
+import { Flame, Clock, Gift, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { generate7DayPlan } from '@/lib/planEngine';
 
 export default function WorkoutsPage() {
     const router = useRouter();
-    const { profile, progress } = useFitFun();
+    const { profile, progress, userId } = useFitFun();
     const [showInterestModal, setShowInterestModal] = useState(false);
     const [email, setEmail] = useState('');
     const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
+    const [emailError, setEmailError] = useState('');
 
     const currentDay = progress.currentPlanDay || 1;
     
@@ -69,10 +70,27 @@ export default function WorkoutsPage() {
                                             className="w-full bg-stone-50 border border-stone-200 rounded-xl p-4 text-stone-700 font-medium outline-none focus:border-brand-500 transition-colors placeholder:text-stone-400 text-center"
                                         />
                                         <button 
-                                            onClick={() => {
-                                                if(email.includes('@')) {
-                                                    setIsEmailSubmitted(true);
-                                                    console.log("BACKEND_TRACK: Email Waitlist Joined -", email);
+                                            onClick={async () => {
+                                                // U2: Proper email validation
+                                                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                                                if (!emailRegex.test(email)) {
+                                                    setEmailError('Please enter a valid email address');
+                                                    return;
+                                                }
+                                                setEmailError('');
+                                                try {
+                                                    const res = await fetch('/api/waitlist', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ email, userId, name: profile.name }),
+                                                    });
+                                                    if (res.ok) {
+                                                        setIsEmailSubmitted(true);
+                                                    } else {
+                                                        setEmailError('Something went wrong. Try again.');
+                                                    }
+                                                } catch {
+                                                    setEmailError('Network error. Try again.');
                                                 }
                                             }}
                                             className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-xl transition-colors active:scale-95 text-lg shadow-md disabled:opacity-50"
@@ -80,6 +98,7 @@ export default function WorkoutsPage() {
                                         >
                                             Join Waitlist
                                         </button>
+                                        {emailError && <p className="text-red-500 text-xs font-bold">{emailError}</p>}
                                     </div>
                                     
                                     <button 
@@ -116,7 +135,26 @@ export default function WorkoutsPage() {
     const plan = generate7DayPlan(profile.fitnessGoal, profile.activityLevel);
     const todayWorkout = plan[currentDay - 1];
 
-    if (!todayWorkout) return null; // Safe fallback
+    if (!todayWorkout) {
+        return (
+            <div className="flex-1 flex flex-col bg-[#FFFDF7] animate-in fade-in duration-700 h-full">
+                <Header title="Your Personal Plan" />
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                        <AlertTriangle size={32} className="text-red-400" />
+                    </div>
+                    <h2 className="text-xl font-black text-gray-900 mb-2">Something went wrong</h2>
+                    <p className="text-gray-500 text-sm mb-6">We couldn't load today's workout. Try refreshing the page.</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="bg-brand-500 text-white font-bold py-3 px-8 rounded-full active:scale-95 transition-transform"
+                    >
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 flex flex-col bg-[#FFFDF7] overflow-y-auto custom-scrollbar animate-in fade-in duration-700 pb-10 min-h-0">

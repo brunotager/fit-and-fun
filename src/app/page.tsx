@@ -3,6 +3,7 @@
 import { useFitFun } from "@/context/FitFunContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Spinner } from "@/components/Spinner";
 
 export default function WelcomePage() {
   const { profile, isLoading } = useFitFun();
@@ -18,5 +19,10 @@ export default function WelcomePage() {
     }
   }, [isLoading, profile, router]);
 
-  return <div className="flex-1 flex items-center justify-center text-brand-500">Loading...</div>;
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-brand-500">
+      <Spinner size={36} />
+      <span className="text-sm font-medium text-stone-400">Loading...</span>
+    </div>
+  );
 }

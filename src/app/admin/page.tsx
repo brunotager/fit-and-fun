@@ -29,7 +29,9 @@ export default function AdminDashboard() {
     }
 
     try {
-      const res = await fetch(`/api/admin/stats?secret=${encodeURIComponent(secret)}`);
+      const res = await fetch('/api/admin/stats', {
+        headers: { 'Authorization': `Bearer ${secret}` },
+      });
       if (res.status === 401) {
         sessionStorage.removeItem('admin_secret');
         router.push('/admin/login');

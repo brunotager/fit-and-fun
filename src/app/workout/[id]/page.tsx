@@ -4,7 +4,7 @@ import { useState, use, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFitFun } from '@/context/FitFunContext';
 import { ChevronLeft, Play, Pause, Check, X, Star, Footprints, Flame, Trophy, ChevronUp, ChevronDown } from 'lucide-react';
-import confetti from 'canvas-confetti';
+// P2: Lazy load confetti — only imported when workout completes
 import { workouts } from '@/data/workouts';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -32,6 +32,11 @@ export default function WorkoutActivePage({ params }: PageProps) {
 
     // Finish Confirmation State
     const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+
+    // U1: Guard to prevent double-completion
+    const hasCompletedRef = useRef(false);
+    // Track which type of completion happened for the UI
+    const [completionKind, setCompletionKind] = useState<'timer_finished' | 'manual_end'>('manual_end');
 
     // Bottom Sheet Expanded State
     const [isSheetExpanded, setIsSheetExpanded] = useState(false);
@@ -65,6 +70,11 @@ export default function WorkoutActivePage({ params }: PageProps) {
 
     // Handle Completion Celebration
     const triggerCompletion = (completionType: 'timer_finished' | 'manual_end' = 'manual_end') => {
+        // U1: Guard against double-completion
+        if (hasCompletedRef.current) return;
+        hasCompletedRef.current = true;
+
+        setCompletionKind(completionType);
         setManualCompleted(true); // Force local state to transparently switch to completion view
         const validCategory = (workout?.category.toLowerCase() as any) || 'cardio';
         completeWorkout({
@@ -75,15 +85,20 @@ export default function WorkoutActivePage({ params }: PageProps) {
             workoutId: workout?.id || 'unknown',
             completionType: completionType
         });
-        setTimeout(() => {
-            confetti({
-                particleCount: 150,
-                spread: 80,
-                origin: { y: 0.6 },
-                colors: ['#F97316', '#FDBA74', '#FFEDD5']
-            });
-        }, 300); // Slight delay for modal entrance
 
+        // P2: Only load confetti when actually needed, and only for full completions
+        if (completionType === 'timer_finished') {
+            import('canvas-confetti').then(({ default: confetti }) => {
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 150,
+                        spread: 80,
+                        origin: { y: 0.6 },
+                        colors: ['#F97316', '#FDBA74', '#FFEDD5']
+                    });
+                }, 300);
+            });
+        }
     };
 
     // State for step celebration
@@ -155,44 +170,59 @@ export default function WorkoutActivePage({ params }: PageProps) {
                         />
                     </div>
 
-                    <div className="bg-brand-100 text-brand-600 px-4 py-1.5 rounded-full font-bold text-sm inline-block mx-auto mb-4 tracking-wide">
-                        DAY {displayDay} COMPLETED!
+                    <div className={`px-4 py-1.5 rounded-full font-bold text-sm inline-block mx-auto mb-4 tracking-wide ${
+                        completionKind === 'timer_finished' ? 'bg-brand-100 text-brand-600' : 'bg-stone-100 text-stone-600'
+                    }`}>
+                        {completionKind === 'timer_finished' ? `DAY ${displayDay} COMPLETED!` : 'WORKOUT ENDED EARLY'}
                     </div>
 
                     {/* Header */}
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase mb-4">CONGRATS!</h1>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase mb-4">
+                        {completionKind === 'timer_finished' ? 'CONGRATS!' : 'GOOD EFFORT!'}
+                    </h1>
 
                     <p className="text-gray-600 mb-8 leading-relaxed text-[15px] font-medium px-2">
-                        {getMotivationalMessage(displayDay)}
+                        {completionKind === 'timer_finished'
+                            ? getMotivationalMessage(displayDay)
+                            : "You ended early — no points this time. Complete the full workout to earn your reward!"}
                     </p>
 
                     {/* Stats */}
                     <div className="flex justify-between items-start mb-10 px-4">
                         <div className="flex flex-col items-center gap-1">
-                            <Star size={28} className="text-gray-900 mb-1" strokeWidth={1.5} />
-                            <span className="text-xl font-bold text-gray-900">{calculatedPoints}</span>
+                            <Star size={28} className={`mb-1 ${completionKind === 'timer_finished' ? 'text-gray-900' : 'text-gray-300'}`} strokeWidth={1.5} />
+                            <span className={`text-xl font-bold ${completionKind === 'timer_finished' ? 'text-gray-900' : 'text-gray-300'}`}>{completionKind === 'timer_finished' ? calculatedPoints : 0}</span>
                             <span className="text-xs text-gray-500 font-medium lowercase">points</span>
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                            <Footprints size={28} className="text-gray-900 mb-1" strokeWidth={1.5} />
-                            <span className="text-xl font-bold text-gray-900">{stepCount}</span>
+                            <Footprints size={28} className={`mb-1 ${completionKind === 'timer_finished' ? 'text-gray-900' : 'text-gray-300'}`} strokeWidth={1.5} />
+                            <span className={`text-xl font-bold ${completionKind === 'timer_finished' ? 'text-gray-900' : 'text-gray-300'}`}>{completionKind === 'timer_finished' ? stepCount : 0}</span>
                             <span className="text-xs text-gray-500 font-medium lowercase">steps</span>
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                            <Flame size={28} className="text-gray-900 mb-1" strokeWidth={1.5} />
-                            <span className="text-xl font-bold text-gray-900">{calculatedCalories}</span>
+                            <Flame size={28} className={`mb-1 ${completionKind === 'timer_finished' ? 'text-gray-900' : 'text-gray-300'}`} strokeWidth={1.5} />
+                            <span className={`text-xl font-bold ${completionKind === 'timer_finished' ? 'text-gray-900' : 'text-gray-300'}`}>{completionKind === 'timer_finished' ? calculatedCalories : 0}</span>
                             <span className="text-xs text-gray-500 font-medium lowercase">calories</span>
                         </div>
                     </div>
 
                     {/* Buttons */}
                     <div className="flex flex-col gap-3">
-                        <button
-                            onClick={() => router.push('/progress')}
-                            className="w-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold py-4 rounded-full shadow-lg active:scale-95 transition-transform uppercase tracking-wider text-sm"
-                        >
-                            CLAIM REWARD
-                        </button>
+                        {completionKind === 'timer_finished' ? (
+                            <button
+                                onClick={() => router.push('/progress')}
+                                className="w-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold py-4 rounded-full shadow-lg active:scale-95 transition-transform uppercase tracking-wider text-sm"
+                            >
+                                CLAIM REWARD
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => { hasCompletedRef.current = false; setManualCompleted(false); }}
+                                className="w-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold py-4 rounded-full shadow-lg active:scale-95 transition-transform uppercase tracking-wider text-sm"
+                            >
+                                RESTART WORKOUT
+                            </button>
+                        )}
                         <button
                             onClick={() => router.push('/home')}
                             className="w-full bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-800 font-bold py-4 rounded-full active:scale-95 transition-transform uppercase tracking-wider text-sm"

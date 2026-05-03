@@ -5,10 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useFitFun } from '@/context/FitFunContext';
-import { ChevronLeft, ChevronRight, Watch, HelpCircle, Bell, Info, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Watch, HelpCircle, Bell, Info, RotateCcw } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { ConnectDeviceModal } from '@/components/ConnectDeviceModal';
-import { HelpModal, NotificationsModal, AboutModal, LogOutModal } from '@/components/SettingsModals';
+import { HelpModal, NotificationsModal, AboutModal, ResetProgressModal } from '@/components/SettingsModals';
 
 export default function SettingsPage() {
     const { profile, resetProgress } = useFitFun();
@@ -17,10 +17,9 @@ export default function SettingsPage() {
     const [isHelpOpen, setHelpOpen] = useState(false);
     const [isNotifOpen, setNotifOpen] = useState(false);
     const [isAboutOpen, setAboutOpen] = useState(false);
-    const [isLogOutOpen, setLogOutOpen] = useState(false);
+    const [isResetOpen, setResetOpen] = useState(false);
 
-    const handleLogout = () => {
-        // Log out means reseting the progress in this local context setup
+    const handleReset = () => {
         resetProgress();
     };
 
@@ -61,7 +60,7 @@ export default function SettingsPage() {
                         <MenuItem icon={HelpCircle} label="Help" onClick={() => setHelpOpen(true)} />
                         <MenuItem icon={Bell} label="Notifications" onClick={() => setNotifOpen(true)} />
                         <MenuItem icon={Info} label="About us" onClick={() => setAboutOpen(true)} />
-                        <MenuItem icon={LogOut} label="Log out" onClick={() => setLogOutOpen(true)} showCaret={false} />
+                        <MenuItem icon={RotateCcw} label="Reset progress" onClick={() => setResetOpen(true)} showCaret={false} />
                     </div>
                 </div>
             </div>
@@ -73,7 +72,7 @@ export default function SettingsPage() {
             <HelpModal isOpen={isHelpOpen} onClose={() => setHelpOpen(false)} />
             <NotificationsModal isOpen={isNotifOpen} onClose={() => setNotifOpen(false)} />
             <AboutModal isOpen={isAboutOpen} onClose={() => setAboutOpen(false)} />
-            <LogOutModal isOpen={isLogOutOpen} onClose={() => setLogOutOpen(false)} onLogOut={handleLogout} />
+            <ResetProgressModal isOpen={isResetOpen} onClose={() => setResetOpen(false)} onReset={handleReset} />
         </div>
     );
 }

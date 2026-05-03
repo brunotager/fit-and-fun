@@ -1,40 +1,32 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { syncUserSchema } from '@/lib/validation';
+import { deactivateUserSchema } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
-    // S4: Validate input
-    const parsed = syncUserSchema.safeParse(body);
+    const parsed = deactivateUserSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { id, name, joinDate, goalType, fitnessGoal, activityLevel, lastActiveDay } = parsed.data;
+    const { id } = parsed.data;
 
+    // Mark user as deactivated instead of deleting (D1)
+    // Data can be purged after 90 days via a scheduled Supabase function
     const { error } = await supabase
       .from('users')
-      .upsert({
-        id,
-        name,
-        join_date: joinDate,
-        goal_type: goalType,
-        fitness_goal: fitnessGoal,
-        activity_level: activityLevel,
-        last_active_day: lastActiveDay,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
+      .update({ deactivated_at: new Date().toISOString() })
+      .eq('id', id);
 
     if (error) {
-      console.error('Supabase users error:', error);
+      console.error('Deactivate user error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Sync user error:', err);
+    console.error('Deactivate user error:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

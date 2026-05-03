@@ -3,27 +3,30 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const secret = searchParams.get('secret');
+    // S1: Read secret from Authorization header instead of query params
+    const authHeader = request.headers.get('authorization');
+    const secret = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-    // Simple authentication check
-    if (secret !== process.env.ADMIN_SECRET_CODE) {
+    if (!secret || secret !== process.env.ADMIN_SECRET_CODE) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch users
+    // Fetch users with limit (E2)
     const { data: users, error: usersError } = await supabase
       .from('users')
       .select('*')
-      .order('join_date', { ascending: false });
+      .is('deactivated_at', null)
+      .order('join_date', { ascending: false })
+      .limit(100);
 
     if (usersError) throw usersError;
 
-    // Fetch workouts
+    // Fetch workouts with limit (E2)
     const { data: workouts, error: workoutsError } = await supabase
       .from('workouts')
       .select('*')
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
+      .limit(500);
 
     if (workoutsError) throw workoutsError;
 
