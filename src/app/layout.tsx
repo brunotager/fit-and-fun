@@ -15,7 +15,18 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Fit & Fun",
-  description: "Gamified fitness with Coach Gabi",
+  description: "Your 7-day guided fitness journey with Coach Gabi. Fun workouts, daily streaks, and zero gym required.",
+  openGraph: {
+    title: "Fit & Fun — 7 Days to a Better You",
+    description: "Fun, gamified workouts with Coach Gabi. Start your streak today!",
+    images: ["/gabi-celebrate-v2.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fit & Fun — 7 Days to a Better You",
+    description: "Fun, gamified workouts with Coach Gabi. Start your streak today!",
+    images: ["/gabi-celebrate-v2.png"],
+  },
 };
 
 import { Navigation } from "@/components/Navigation";
