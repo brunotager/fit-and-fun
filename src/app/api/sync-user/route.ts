@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { id, name, joinDate, goalType, fitnessGoal, activityLevel, lastActiveDay } = parsed.data;
+    const { id, name, joinDate, goalType, fitnessGoal, activityLevel, lastActiveDay, heightPrimary, heightSecondary, heightUnit, weight, weightUnit } = parsed.data;
 
     const { error } = await supabase
       .from('users')
@@ -24,6 +24,11 @@ export async function POST(request: Request) {
         fitness_goal: fitnessGoal,
         activity_level: activityLevel,
         last_active_day: lastActiveDay,
+        height_primary: heightPrimary,
+        height_secondary: heightSecondary,
+        height_unit: heightUnit,
+        weight: weight,
+        weight_unit: weightUnit,
         updated_at: new Date().toISOString()
       }, { onConflict: 'id' });
 

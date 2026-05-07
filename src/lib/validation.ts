@@ -12,6 +12,11 @@ export const syncUserSchema = z.object({
   fitnessGoal: z.enum(['Weight loss', 'Muscle gain', 'Maintain weight', '']).optional(),
   activityLevel: z.enum(['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active', '']).optional(),
   lastActiveDay: z.number().int().min(1).max(100).optional(),
+  heightPrimary: z.number().int().min(0).max(300).optional(),
+  heightSecondary: z.number().int().min(0).max(300).optional(),
+  heightUnit: z.enum(['ft/in', 'm/cm']).optional(),
+  weight: z.number().min(0).max(1000).optional(),
+  weightUnit: z.enum(['lbs', 'kg']).optional(),
 });
 
 // --- Sync Workout Schema (S4) ---

@@ -1,5 +1,6 @@
 'use client';
 
+
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { updateProgress, checkBadges } from '@/lib/progressEngine';
 import { workouts } from '@/data/workouts';
@@ -18,7 +19,7 @@ export interface Profile {
   goalType: GoalType;
   setupComplete: boolean;
   joinDate: string;
-  
+
   // New Physical/Personal Fields
   profileImage?: string; // base64
   heightPrimary?: number; // ft or m
@@ -59,11 +60,17 @@ interface FitFunContextType {
   updateProfile: (data: Partial<Profile>) => void;
   completeWorkout: (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string; completionType?: 'timer_finished' | 'manual_end' }) => void;
   resetProgress: () => void;
-  logOut: () => void; // U3: non-destructive log out
+  logOut: () => void;
   updateProgressState: (data: Partial<Progress>) => void;
   isLoading: boolean;
   toasts: ToastMessage[];
   dismissToast: (id: string) => void;
+  notificationsEnabled: boolean;
+  setNotificationsEnabled: (enabled: boolean) => void;
+  reminderTime: string;
+  setReminderTime: (time: string) => void;
+  notificationPromptCount: number;
+  incrementNotificationPromptCount: () => void;
 }
 
 // --- Constants ---
@@ -141,8 +148,30 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
+  const [reminderTime, setReminderTimeState] = useState('09:00');
+  const [notificationPromptCount, setNotificationPromptCount] = useState(0);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Notification helpers
+  const setNotificationsEnabled = useCallback((enabled: boolean) => {
+    setNotificationsEnabledState(enabled);
+    localStorage.setItem('fitfun_notifications_enabled', JSON.stringify(enabled));
+  }, []);
+
+  const setReminderTime = useCallback((time: string) => {
+    setReminderTimeState(time);
+    localStorage.setItem('fitfun_reminder_time', time);
+  }, []);
+
+  const incrementNotificationPromptCount = useCallback(() => {
+    setNotificationPromptCount(prev => {
+      const next = prev + 1;
+      localStorage.setItem('fitfun_notification_prompt_count', String(next));
+      return next;
+    });
+  }, []);
 
   // Toast helpers
   const addToast = useCallback((text: string, type: 'error' | 'success' = 'error') => {
@@ -232,6 +261,14 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     }
     if (savedLogs) setLogs(JSON.parse(savedLogs));
 
+    // Load notification preferences
+    const savedNotifEnabled = localStorage.getItem('fitfun_notifications_enabled');
+    if (savedNotifEnabled) setNotificationsEnabledState(JSON.parse(savedNotifEnabled));
+    const savedReminderTime = localStorage.getItem('fitfun_reminder_time');
+    if (savedReminderTime) setReminderTimeState(savedReminderTime);
+    const savedPromptCount = localStorage.getItem('fitfun_notification_prompt_count');
+    if (savedPromptCount) setNotificationPromptCount(parseInt(savedPromptCount) || 0);
+
     setIsLoading(false);
   }, []);
 
@@ -245,9 +282,9 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
 
   const syncProfileToDB = useCallback((currentProfile: Profile, currentProgress: Progress, currentUserId: string) => {
     if (!currentProfile.setupComplete || !currentUserId) return;
-    
+
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-    
+
     syncTimeoutRef.current = setTimeout(() => {
       resilientFetch('/api/sync-user', {
         id: currentUserId,
@@ -257,6 +294,11 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
         fitnessGoal: currentProfile.fitnessGoal,
         activityLevel: currentProfile.activityLevel,
         lastActiveDay: currentProgress.currentPlanDay,
+        heightPrimary: currentProfile.heightPrimary,
+        heightSecondary: currentProfile.heightSecondary,
+        heightUnit: currentProfile.heightUnit,
+        weight: currentProfile.weight,
+        weightUnit: currentProfile.weightUnit,
       });
     }, 1500);
   }, [resilientFetch]);
@@ -375,6 +417,12 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       toasts,
       dismissToast,
+      notificationsEnabled,
+      setNotificationsEnabled,
+      reminderTime,
+      setReminderTime,
+      notificationPromptCount,
+      incrementNotificationPromptCount,
     }}>
       {children}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />

@@ -1,68 +1,114 @@
 import { useState, useEffect, useRef } from 'react';
 
-// Assuming steps are evenly distributed for this prototype
-// In a real app, steps would have specific durations
-export function useWorkoutLogic(totalDurationMinutes: number, totalSteps: number, onComplete: () => void) {
-    const totalSeconds = totalDurationMinutes * 60;
-    const stepDurationSeconds = totalSteps > 0 ? totalSeconds / totalSteps : totalSeconds;
+export interface StepInfo {
+  index: number;         // Index into the original exercise steps array
+  isRest: boolean;       // Whether this is a rest period
+  label: string;         // Display label (exercise name or "REST")
+}
 
-    const [timeLeft, setTimeLeft] = useState(totalSeconds);
-    const [isActive, setIsActive] = useState(true);
-    const [isCompleted, setIsCompleted] = useState(false);
+// Builds an interleaved schedule: [exercise, rest, exercise, rest, ..., exercise]
+function buildSchedule(totalSteps: number, restSeconds: number, totalSeconds: number): { steps: StepInfo[]; durations: number[] } {
+  if (totalSteps <= 0) return { steps: [], durations: [] };
 
-    const savedOnComplete = useRef(onComplete);
-    useEffect(() => {
-        savedOnComplete.current = onComplete;
-    }, [onComplete]);
+  const restCount = totalSteps - 1; // rest between each pair
+  const totalRestTime = restCount * restSeconds;
+  const exerciseTime = totalSeconds - totalRestTime;
+  const perExercise = exerciseTime / totalSteps;
 
-    // We calculate current step based on elapsed time to ensure sync
-    const elapsed = totalSeconds - timeLeft;
-    const currentStepIndex = Math.min(
-        Math.floor(elapsed / stepDurationSeconds),
-        totalSteps > 0 ? totalSteps - 1 : 0
-    );
+  const steps: StepInfo[] = [];
+  const durations: number[] = [];
 
-    // Step Time Calculation
-    // Time remaining in current step = Step Duration - (Elapsed % Step Duration)
-    // Using modulo might result in 0 at the exact start of a step, handling edge cases
-    const timeInCurrentStep = elapsed % stepDurationSeconds;
-    const stepTimeLeft = Math.max(0, stepDurationSeconds - timeInCurrentStep);
+  for (let i = 0; i < totalSteps; i++) {
+    steps.push({ index: i, isRest: false, label: '' }); // label filled by UI
+    durations.push(perExercise);
 
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isActive && timeLeft > 0) {
-            interval = setInterval(() => {
-                setTimeLeft((prev) => {
-                    return prev > 0 ? prev - 1 : 0;
-                });
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [isActive, timeLeft > 0]);
+    if (i < totalSteps - 1) {
+      steps.push({ index: i, isRest: true, label: 'REST' });
+      durations.push(restSeconds);
+    }
+  }
 
-    useEffect(() => {
-        if (timeLeft === 0 && !isCompleted) {
-            setIsActive(false);
-            setIsCompleted(true);
-            savedOnComplete.current();
-        }
-    }, [timeLeft, isCompleted]);
+  return { steps, durations };
+}
 
-    const togglePause = () => setIsActive(!isActive);
+export function useWorkoutLogic(totalDurationMinutes: number, totalSteps: number, onComplete: () => void, restSeconds = 15) {
+  const totalSeconds = totalDurationMinutes * 60;
+  const { steps: schedule, durations } = buildSchedule(totalSteps, restSeconds, totalSeconds);
 
-    return {
-        timeLeft,
-        stepTimeLeft,
-        currentStepIndex,
-        isActive,
-        isCompleted,
-        togglePause,
-        formatTime: (sec: number) => {
-            const m = Math.floor(sec / 60);
-            const s = Math.floor(sec % 60); // Ensure integer
-            return `${m}:${s < 10 ? '0' : ''}${s}`;
-        },
-        progressPercentage: (timeLeft / totalSeconds) * 100,
-        stepProgressPercentage: totalSteps > 0 ? (stepTimeLeft / stepDurationSeconds) * 100 : 100
-    };
+  const [timeLeft, setTimeLeft] = useState(totalSeconds);
+  const [isActive, setIsActive] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  const savedOnComplete = useRef(onComplete);
+  useEffect(() => {
+    savedOnComplete.current = onComplete;
+  }, [onComplete]);
+
+  // Determine which schedule slot we're in based on elapsed time
+  const elapsed = totalSeconds - timeLeft;
+  let cumulative = 0;
+  let currentSlotIndex = 0;
+  for (let i = 0; i < durations.length; i++) {
+    cumulative += durations[i];
+    if (elapsed < cumulative) {
+      currentSlotIndex = i;
+      break;
+    }
+    if (i === durations.length - 1) {
+      currentSlotIndex = i;
+    }
+  }
+
+  const currentSlot = schedule[currentSlotIndex] || { index: 0, isRest: false, label: '' };
+  const slotStart = durations.slice(0, currentSlotIndex).reduce((a, b) => a + b, 0);
+  const slotDuration = durations[currentSlotIndex] || 1;
+  const slotElapsed = elapsed - slotStart;
+  const slotTimeLeft = Math.max(0, slotDuration - slotElapsed);
+
+  // Map back to the original exercise index (skipping rest slots)
+  const currentStepIndex = currentSlot.index;
+  const isResting = currentSlot.isRest;
+
+  // Next exercise name hint (for rest screen)
+  const nextExerciseIndex = isResting ? currentSlot.index + 1 : currentSlot.index + 1;
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          return prev > 0 ? prev - 1 : 0;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, timeLeft > 0]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !isCompleted) {
+      setIsActive(false);
+      setIsCompleted(true);
+      savedOnComplete.current();
+    }
+  }, [timeLeft, isCompleted]);
+
+  const togglePause = () => setIsActive(!isActive);
+
+  return {
+    timeLeft,
+    stepTimeLeft: slotTimeLeft,
+    currentStepIndex,
+    isResting,
+    nextExerciseIndex,
+    isActive,
+    isCompleted,
+    togglePause,
+    formatTime: (sec: number) => {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    },
+    progressPercentage: (timeLeft / totalSeconds) * 100,
+    stepProgressPercentage: totalSteps > 0 ? (slotTimeLeft / slotDuration) * 100 : 100
+  };
 }

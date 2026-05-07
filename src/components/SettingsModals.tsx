@@ -134,46 +134,90 @@ export function ResetProgressModal({ isOpen, onClose, onReset }: SharedModalProp
 }
 
 export function NotificationsModal({ isOpen, onClose }: SharedModalProps) {
-    // Mock state since user requested front-end interactions without backend currently attached
-    const [daily, setDaily] = useState(true);
-    const [weekly, setWeekly] = useState(true);
-    const [updates, setUpdates] = useState(false);
-
-    const Toggle = ({ active, onChange, label, desc }: any) => (
-        <div className="flex items-center justify-between py-3 border-b border-stone-100 last:border-b-0 text-left">
-            <div className="flex flex-col mr-4">
-                <span className="font-bold text-[13px] text-gray-900">{label}</span>
-                <span className="text-[11px] font-medium text-gray-400 leading-tight mt-0.5">{desc}</span>
-            </div>
-            <button 
-                onClick={onChange}
-                className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${active ? 'bg-brand-500' : 'bg-gray-200'}`}
-            >
-                <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${active ? 'translate-x-5' : 'translate-x-0'}`} />
-            </button>
-        </div>
-    );
-
     return (
         <ModalWrapper isOpen={isOpen} onClose={onClose}>
+            <NotificationsContent onClose={onClose} />
+        </ModalWrapper>
+    );
+}
+
+// Separate component so we can use hooks inside ModalWrapper
+function NotificationsContent({ onClose }: { onClose: () => void }) {
+    const { useFitFun } = require('@/context/FitFunContext');
+    const { notificationsEnabled, setNotificationsEnabled, reminderTime, setReminderTime, userId } = useFitFun();
+
+    const handleToggle = async () => {
+        if (notificationsEnabled) {
+            // Turn off
+            const { unsubscribeFromPush } = await import('@/lib/notifications');
+            await unsubscribeFromPush(userId);
+            setNotificationsEnabled(false);
+        } else {
+            // Turn on
+            const { subscribeToPush, isNotificationSupported } = await import('@/lib/notifications');
+            if (!isNotificationSupported()) return;
+            const success = await subscribeToPush(userId, reminderTime);
+            if (success) {
+                setNotificationsEnabled(true);
+            }
+        }
+    };
+
+    const handleTimeChange = async (newTime: string) => {
+        setReminderTime(newTime);
+        // Update subscription time in DB
+        if (notificationsEnabled) {
+            await fetch('/api/save-push-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId,
+                    endpoint: '', // Will be filled by the upsert
+                    keysP256dh: '',
+                    keysAuth: '',
+                    reminderTime: newTime,
+                }),
+            }).catch(() => {});
+        }
+    };
+
+    return (
+        <>
             <h3 className="text-xl font-black text-gray-900 mb-2">Notifications</h3>
             <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-                Stay motivated without the spam.
+                A daily nudge to keep your streak alive.
             </p>
             
             <div className="mb-6 flex flex-col">
-                <Toggle 
-                    active={daily} onChange={() => setDaily(!daily)}
-                    label="Daily Reminder" desc="A quick nudge to keep your streak going." 
-                />
-                <Toggle 
-                    active={weekly} onChange={() => setWeekly(!weekly)}
-                    label="Weekly Summary" desc="Your progress digest every Sunday." 
-                />
-                <Toggle 
-                    active={updates} onChange={() => setUpdates(!updates)}
-                    label="Product Updates" desc="New workouts and feature alerts." 
-                />
+                <div className="flex items-center justify-between py-3 border-b border-stone-100 text-left">
+                    <div className="flex flex-col mr-4">
+                        <span className="font-bold text-[13px] text-gray-900">Daily Workout Reminder</span>
+                        <span className="text-[11px] font-medium text-gray-400 leading-tight mt-0.5">
+                            {notificationsEnabled ? "You'll get a daily nudge" : "Currently off"}
+                        </span>
+                    </div>
+                    <button 
+                        onClick={handleToggle}
+                        className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ${notificationsEnabled ? 'bg-brand-500' : 'bg-gray-200'}`}
+                    >
+                        <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${notificationsEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                </div>
+
+                {notificationsEnabled && (
+                    <div className="flex items-center justify-between py-3 text-left animate-in fade-in duration-200">
+                        <div className="flex flex-col mr-4">
+                            <span className="font-bold text-[13px] text-gray-900">Reminder Time</span>
+                            <span className="text-[11px] font-medium text-gray-400 leading-tight mt-0.5">When should we ping you?</span>
+                        </div>
+                        <input 
+                            type="time" 
+                            value={reminderTime}
+                            onChange={(e) => handleTimeChange(e.target.value)}
+                            className="bg-stone-100 border border-stone-200 rounded-lg px-3 py-1.5 text-sm font-bold text-gray-800 focus:outline-none focus:border-brand-500"
+                        />
+                    </div>
+                )}
             </div>
 
             <div className="flex flex-col gap-3">
@@ -184,6 +228,6 @@ export function NotificationsModal({ isOpen, onClose }: SharedModalProps) {
                     Done
                 </button>
             </div>
-        </ModalWrapper>
+        </>
     );
 }

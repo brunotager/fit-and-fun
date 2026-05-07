@@ -3,7 +3,7 @@
 import { useState, use, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFitFun } from '@/context/FitFunContext';
-import { ChevronLeft, Play, Pause, Check, X, Star, Footprints, Flame, Trophy, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronLeft, Play, Pause, Check, X, Star, Footprints, Flame, Trophy, ChevronUp, ChevronDown, Bell } from 'lucide-react';
 // P2: Lazy load confetti — only imported when workout completes
 import { workouts } from '@/data/workouts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,7 +19,7 @@ interface PageProps {
 
 export default function WorkoutActivePage({ params }: PageProps) {
     const router = useRouter();
-    const { completeWorkout, profile, progress } = useFitFun();
+    const { completeWorkout, profile, progress, userId, notificationsEnabled, setNotificationsEnabled, notificationPromptCount, incrementNotificationPromptCount } = useFitFun();
 
     // Unwrap params
     const resolvedParams = use(params);
@@ -49,6 +49,8 @@ export default function WorkoutActivePage({ params }: PageProps) {
         timeLeft,
         stepTimeLeft,
         currentStepIndex,
+        isResting,
+        nextExerciseIndex,
         isActive,
         isCompleted: hookCompleted,
         togglePause,
@@ -206,11 +208,55 @@ export default function WorkoutActivePage({ params }: PageProps) {
                         </div>
                     </div>
 
+                    {/* Notification Opt-in (Day 1 and Day 2 only, timer_finished only) */}
+                    {completionKind === 'timer_finished' && !notificationsEnabled && notificationPromptCount < 2 && (
+                        <div className="bg-stone-50 rounded-2xl p-4 mb-4 border border-stone-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <Bell size={20} className="text-brand-500 shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-bold text-gray-900 leading-tight">
+                                            {notificationPromptCount === 0
+                                                ? "Want a daily reminder?"
+                                                : "Last chance — turn on reminders?"}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-0.5 leading-tight">
+                                            {notificationPromptCount === 0
+                                                ? "We'll nudge you so you never miss a workout. Change the time in Settings."
+                                                : "You can always turn them on later in Settings."}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={async () => {
+                                        const { subscribeToPush, isNotificationSupported } = await import('@/lib/notifications');
+                                        if (!isNotificationSupported()) {
+                                            return;
+                                        }
+                                        const success = await subscribeToPush(userId);
+                                        if (success) {
+                                            setNotificationsEnabled(true);
+                                        }
+                                        incrementNotificationPromptCount();
+                                    }}
+                                    className={`relative w-11 h-6 rounded-full shrink-0 transition-colors ml-3 ${notificationsEnabled ? 'bg-brand-500' : 'bg-gray-200'}`}
+                                >
+                                    <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${notificationsEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Buttons */}
                     <div className="flex flex-col gap-3">
                         {completionKind === 'timer_finished' ? (
                             <button
-                                onClick={() => router.push('/progress')}
+                                onClick={() => {
+                                    if (!notificationsEnabled && notificationPromptCount < 2) {
+                                        incrementNotificationPromptCount();
+                                    }
+                                    router.push('/progress');
+                                }}
                                 className="w-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold py-4 rounded-full shadow-lg active:scale-95 transition-transform uppercase tracking-wider text-sm"
                             >
                                 CLAIM REWARD
@@ -317,7 +363,7 @@ export default function WorkoutActivePage({ params }: PageProps) {
                 {/* Compact View Content */}
                 <motion.div layout="position" className="px-6 pt-2 pb-6 flex items-center gap-5 shrink-0 relative">
 
-                    {/* Step Timer (Secondary but First Class) */}
+                    {/* Step Timer */}
                     <div className="relative shrink-0">
                         {showStepCelebrate && (
                             <motion.div
@@ -333,47 +379,69 @@ export default function WorkoutActivePage({ params }: PageProps) {
                             progress={stepProgressPercentage}
                             size={90}
                             strokeWidth={7}
-                            color="#f97316"
+                            color={isResting ? '#94a3b8' : '#f97316'}
                             trackColor="#f3f4f6"
                         >
                             <div className="flex flex-col items-center justify-center h-full">
-                                <span className="text-xl font-black text-gray-800 tabular-nums leading-none mb-0.5">
+                                <span className={`text-xl font-black tabular-nums leading-none mb-0.5 ${isResting ? 'text-slate-500' : 'text-gray-800'}`}>
                                     {formatTime(stepTimeLeft)}
                                 </span>
-                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">STEP</span>
+                                <span className={`text-[9px] font-bold uppercase tracking-wide ${isResting ? 'text-slate-400' : 'text-gray-400'}`}>
+                                    {isResting ? 'REST' : 'STEP'}
+                                </span>
                             </div>
                         </CircularTimer>
                     </div>
 
                     {/* Text Area */}
                     <div className="flex-1 min-w-0" onClick={() => setIsSheetExpanded(!isSheetExpanded)}>
-                        {/* NOW */}
-                        <div className="mb-2">
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-[10px] font-black text-brand-500 uppercase tracking-widest">NOW</span>
-                                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{currentStepIndex + 1} / {steps.length}</span>
-                            </div>
-                            <AnimatePresence mode='wait'>
-                                <motion.h3
-                                    key={currentStepIndex}
+                        <AnimatePresence mode='wait'>
+                            {isResting ? (
+                                <motion.div
+                                    key={`rest-${currentStepIndex}`}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
                                     transition={{ duration: 0.2 }}
-                                    className="text-lg font-bold text-gray-900 leading-tight truncate"
                                 >
-                                    {steps[currentStepIndex]}
-                                </motion.h3>
-                            </AnimatePresence>
-                        </div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">TAKE A BREATH 💨</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-500 leading-tight">Rest</h3>
+                                    {nextExerciseIndex < steps.length && (
+                                        <div className="flex items-center gap-2 mt-2 opacity-60">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest shrink-0">UP NEXT</span>
+                                            <span className="text-sm font-medium text-gray-500 truncate">{steps[nextExerciseIndex]}</span>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key={`step-${currentStepIndex}`}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <div className="mb-2">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-[10px] font-black text-brand-500 uppercase tracking-widest">NOW</span>
+                                            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{currentStepIndex + 1} / {steps.length}</span>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-900 leading-tight truncate">
+                                            {steps[currentStepIndex]}
+                                        </h3>
+                                    </div>
 
-                        {/* NEXT */}
-                        {currentStepIndex < steps.length - 1 && (
-                            <div className="flex items-center gap-2 opacity-50">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest shrink-0">NEXT</span>
-                                <span className="text-sm font-medium text-gray-500 truncate">{steps[currentStepIndex + 1]}</span>
-                            </div>
-                        )}
+                                    {currentStepIndex < steps.length - 1 && (
+                                        <div className="flex items-center gap-2 opacity-50">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest shrink-0">NEXT</span>
+                                            <span className="text-sm font-medium text-gray-500 truncate">{steps[currentStepIndex + 1]}</span>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Expand/Collapse Toggle Icon */}

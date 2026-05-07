@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -34,6 +34,20 @@ export default function ProfilePage() {
         activityLevel: profile.activityLevel || '',
         fitnessGoal: profile.fitnessGoal || '',
     });
+
+    // Re-sync edit values when profile loads/changes (fixes stale-mount bug)
+    useEffect(() => {
+        setEditValues({
+            name: profile.name || '',
+            heightPrimary: profile.heightPrimary ? String(profile.heightPrimary) : '',
+            heightSecondary: profile.heightSecondary ? String(profile.heightSecondary) : '',
+            heightUnit: profile.heightUnit || 'ft/in',
+            weightNum: profile.weight || '',
+            weightUnit: profile.weightUnit || 'lbs',
+            activityLevel: profile.activityLevel || '',
+            fitnessGoal: profile.fitnessGoal || '',
+        });
+    }, [profile.name, profile.heightPrimary, profile.heightSecondary, profile.heightUnit, profile.weight, profile.weightUnit, profile.activityLevel, profile.fitnessGoal]);
 
     // Helper to toggle expansion
     const toggleExpand = (field: ExpandingField) => {
