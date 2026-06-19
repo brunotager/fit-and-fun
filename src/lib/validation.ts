@@ -9,14 +9,15 @@ export const syncUserSchema = z.object({
   name: z.string().max(100).default(''),
   joinDate: z.string().max(50).default(''),
   goalType: z.enum(['cardio', 'strength', 'mobility']).optional(),
-  fitnessGoal: z.enum(['Weight loss', 'Muscle gain', 'Maintain weight', '']).optional(),
-  activityLevel: z.enum(['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active', '']).optional(),
   lastActiveDay: z.number().int().min(1).max(100).optional(),
-  heightPrimary: z.number().int().min(0).max(300).optional(),
-  heightSecondary: z.number().int().min(0).max(300).optional(),
-  heightUnit: z.enum(['ft/in', 'm/cm']).optional(),
-  weight: z.number().min(0).max(1000).optional(),
-  weightUnit: z.enum(['lbs', 'kg']).optional(),
+  heightPrimary: z.coerce.number().min(0).max(300).optional().nullable(),
+  heightSecondary: z.coerce.number().min(0).max(300).optional().nullable(),
+  heightUnit: z.enum(['ft/in', 'm/cm']).optional().nullable(),
+  weight: z.coerce.number().min(0).max(1000).optional().nullable(),
+  weightUnit: z.enum(['lbs', 'kg']).optional().nullable(),
+  notificationsEnabled: z.boolean().optional(),
+  waitlistEmail: z.string().max(255).optional().nullable(),
+  connectedDevice: z.string().max(50).optional().nullable(),
 });
 
 // --- Sync Workout Schema (S4) ---

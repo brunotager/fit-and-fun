@@ -6,13 +6,13 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-brand-50: #fff7ed;
+  --color-brand-50: #FFF0E5;
   --color-brand-100: #ffedd5;
-  --color-brand-500: #f97316;
-  --color-brand-600: #ea580c;
-
-  --color-accent-400: #38bdf8;
-  --color-accent-500: #0ea5e9;
+  --color-brand-200: #fdbab4;
+  --color-brand-300: #fdba74;
+  --color-brand-500: #E86A20;
+  --color-brand-600: #C7571A;
+  --color-brand-700: #A84812;
 }
 
 :root {
@@ -41,4 +41,10 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield !important; /* Firefox */
+}
+
+/* Override default browser focus ring with brand-consistent style */
+*:focus-visible {
+  outline: 2px solid #E86A20; /* brand-500 */
+  outline-offset: 0px;
 }

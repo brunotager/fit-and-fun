@@ -65,3 +65,34 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+// PATCH — update reminder_time only (no subscription keys required)
+const patchSchema = z.object({
+  userId: z.string().uuid(),
+  reminderTime: z.string().regex(/^\d{2}:\d{2}$/),
+});
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const parsed = patchSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from('push_subscriptions')
+      .update({ reminder_time: parsed.data.reminderTime })
+      .eq('user_id', parsed.data.userId);
+
+    if (error) {
+      console.error('Update reminder time error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('Patch push subscription error:', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

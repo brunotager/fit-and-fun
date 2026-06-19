@@ -60,9 +60,13 @@ export default function ProgressPage() {
                 <header className="text-center z-20 mb-6 relative">
                     <h1 className="text-3xl font-black text-gray-900 mb-1">Day {Math.min(currentDay, 7)}</h1>
                     <div className="flex items-center justify-center gap-2 text-sm font-bold text-gray-500">
-                        <span className="bg-brand-50 px-4 py-1.5 rounded-full text-xs tracking-wider text-brand-600 font-black border border-brand-100 shadow-sm">
+                        <button 
+                            onClick={() => router.push('/shop')}
+                            className="bg-brand-50 px-4 py-1.5 rounded-[20px] text-xs tracking-wider text-brand-600 font-black border border-brand-100 shadow-sm hover:bg-brand-100 hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                        >
                             {progress.totalPoints} POINTS
-                        </span>
+                            <span className="text-brand-400">→</span>
+                        </button>
                     </div>
                 </header>
 
@@ -80,7 +84,7 @@ export default function ProgressPage() {
                             ref={pathRef}
                             d="M 200 560 C 350 490, 350 400, 300 350 S 50 300, 100 250 S 350 200, 300 150 S 150 100, 200 50"
                             fill="none"
-                            stroke="#EA580C"
+                            stroke="#E86A20"
                             strokeWidth="8"
                             strokeLinecap="round"
                             style={{ pathLength: pathProgress }}
@@ -90,7 +94,7 @@ export default function ProgressPage() {
                     {/* The Moving Indicator Layer */}
                     <motion.div
                         onClick={() => router.push('/workouts')}
-                        className="absolute z-40 w-12 h-12 rounded-full bg-[#EA580C] ring-4 ring-white shadow-[0_8px_30px_rgb(234,88,12,0.4)] flex items-center justify-center cursor-pointer pointer-events-auto hover:scale-105 active:scale-95 transition-transform"
+                        className="absolute z-40 w-12 h-12 rounded-full bg-[#E86A20] ring-4 ring-white shadow-[0_8px_30px_rgb(232,106,32,0.25)] flex items-center justify-center cursor-pointer pointer-events-auto hover:scale-105 active:scale-95 transition-transform"
                         style={{ top: avatarTop, left: avatarLeft, x: "-50%", y: "-50%" }}
                     >
                         <div className="w-5 h-5 bg-white rounded-full animate-pulse" />
@@ -98,7 +102,7 @@ export default function ProgressPage() {
                         {/* Explicit Pointer Label */}
                         <div className="absolute top-[120%] cursor-pointer pointer-events-auto whitespace-nowrap font-black text-sm text-gray-900 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full shadow-sm border border-stone-200 flex items-center gap-1.5 transition-transform hover:scale-105">
                             Day {Math.min(currentDay, 7)}
-                            <ChevronRight size={14} className="text-[#EA580C] -mr-1" strokeWidth={3} />
+                            <ChevronRight size={14} className="text-[#E86A20] -mr-1" strokeWidth={3} />
                         </div>
                     </motion.div>
 
@@ -141,11 +145,11 @@ function PathNode({ dayNumber, percent, pathRef, pathLength, currentDay }: { day
         >
             <div className={clsx(
                 "w-12 h-12 flex items-center justify-center rounded-full font-black text-md shadow-md transition-all duration-500 backdrop-blur-sm",
-                isCompleted ? "bg-[#FFFDF7] text-gray-800 border-2 border-[#EA580C] shadow-sm" :
+                isCompleted ? "bg-[#FFFDF7] text-gray-800 border-2 border-[#267E00] shadow-sm" :
                 isCurrent ? "opacity-0" : // Let the animated avatar core handle the visual for the current node
                 "bg-gray-100 text-gray-400 border-2 border-white opacity-90 scale-90"
             )}>
-                {isCompleted ? <Check size={20} className="text-[#EA580C]" strokeWidth={3} /> : dayNumber}
+                {isCompleted ? <Check size={20} className="text-[#267E00]" strokeWidth={3} /> : dayNumber}
             </div>
             
             {/* Explicit Label Positioning avoiding S curve clash */}
@@ -156,7 +160,7 @@ function PathNode({ dayNumber, percent, pathRef, pathLength, currentDay }: { day
                     dayNumber === 2 && "left-[110%] ml-2 top-1/2 -translate-y-1/2 justify-start",
                     dayNumber === 3 && "left-[110%] ml-2 top-1/2 -translate-y-1/2 justify-start",
                     dayNumber === 4 && "right-[110%] mr-2 top-1/2 -translate-y-1/2 justify-end",
-                    dayNumber === 5 && "top-[110%] mt-1",
+                    dayNumber === 5 && "bottom-[110%] mb-1",
                     dayNumber === 6 && "left-[110%] ml-2 top-1/2 -translate-y-1/2 justify-start",
                     dayNumber === 7 && "right-[110%] mr-2 top-1/2 -translate-y-1/2 justify-end",
                 )}>

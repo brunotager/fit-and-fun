@@ -12,25 +12,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { id, name, joinDate, goalType, fitnessGoal, activityLevel, lastActiveDay, heightPrimary, heightSecondary, heightUnit, weight, weightUnit } = parsed.data;
+    const { id, name, joinDate, goalType, lastActiveDay, heightPrimary, heightSecondary, heightUnit, weight, weightUnit, notificationsEnabled, waitlistEmail, connectedDevice } = parsed.data;
+
+    // Build the upsert payload, stripping null/undefined fields
+    const upsertData: Record<string, any> = {
+      id,
+      name,
+      join_date: joinDate,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (goalType != null) upsertData.goal_type = goalType;
+    if (lastActiveDay != null) upsertData.last_active_day = lastActiveDay;
+    if (heightPrimary != null) upsertData.height_primary = heightPrimary;
+    if (heightSecondary != null) upsertData.height_secondary = heightSecondary;
+    if (heightUnit != null) upsertData.height_unit = heightUnit;
+    if (weight != null) upsertData.weight = weight;
+    if (weightUnit != null) upsertData.weight_unit = weightUnit;
+    if (notificationsEnabled != null) upsertData.notifications_enabled = notificationsEnabled;
+    if (waitlistEmail != null) upsertData.waitlist_email = waitlistEmail;
+    if (connectedDevice != null) upsertData.connected_device = connectedDevice;
 
     const { error } = await supabase
       .from('users')
-      .upsert({
-        id,
-        name,
-        join_date: joinDate,
-        goal_type: goalType,
-        fitness_goal: fitnessGoal,
-        activity_level: activityLevel,
-        last_active_day: lastActiveDay,
-        height_primary: heightPrimary,
-        height_secondary: heightSecondary,
-        height_unit: heightUnit,
-        weight: weight,
-        weight_unit: weightUnit,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
+      .upsert(upsertData, { onConflict: 'id' });
 
     if (error) {
       console.error('Supabase users error:', error);

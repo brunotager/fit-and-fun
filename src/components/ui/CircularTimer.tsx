@@ -17,7 +17,7 @@ export function CircularTimer({
     progress,
     size = 120,
     strokeWidth = 8,
-    color = "#f97316", // brand-500
+    color = "#E86A20", // brand-500
     trackColor = "#e5e7eb", // gray-200
     children,
     className = ""

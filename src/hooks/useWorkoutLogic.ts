@@ -7,20 +7,23 @@ export interface StepInfo {
 }
 
 // Builds an interleaved schedule: [exercise, rest, exercise, rest, ..., exercise]
-function buildSchedule(totalSteps: number, restSeconds: number, totalSeconds: number): { steps: StepInfo[]; durations: number[] } {
+// The last exercise gets a custom (shorter) duration for cool-down breathing.
+function buildSchedule(totalSteps: number, restSeconds: number, totalSeconds: number, lastExerciseDuration: number): { steps: StepInfo[]; durations: number[] } {
   if (totalSteps <= 0) return { steps: [], durations: [] };
 
-  const restCount = totalSteps - 1; // rest between each pair
+  const restCount = totalSteps - 1;
   const totalRestTime = restCount * restSeconds;
-  const exerciseTime = totalSeconds - totalRestTime;
-  const perExercise = exerciseTime / totalSteps;
+  // Remaining exercise time after subtracting rests and the last exercise
+  const remainingExerciseTime = totalSeconds - totalRestTime - lastExerciseDuration;
+  const perExercise = totalSteps > 1 ? remainingExerciseTime / (totalSteps - 1) : totalSeconds;
 
   const steps: StepInfo[] = [];
   const durations: number[] = [];
 
   for (let i = 0; i < totalSteps; i++) {
-    steps.push({ index: i, isRest: false, label: '' }); // label filled by UI
-    durations.push(perExercise);
+    const isLast = i === totalSteps - 1;
+    steps.push({ index: i, isRest: false, label: '' });
+    durations.push(isLast ? lastExerciseDuration : perExercise);
 
     if (i < totalSteps - 1) {
       steps.push({ index: i, isRest: true, label: 'REST' });
@@ -31,9 +34,9 @@ function buildSchedule(totalSteps: number, restSeconds: number, totalSeconds: nu
   return { steps, durations };
 }
 
-export function useWorkoutLogic(totalDurationMinutes: number, totalSteps: number, onComplete: () => void, restSeconds = 15) {
+export function useWorkoutLogic(totalDurationMinutes: number, totalSteps: number, onComplete: () => void, restSeconds = 10, lastExerciseDuration = 20) {
   const totalSeconds = totalDurationMinutes * 60;
-  const { steps: schedule, durations } = buildSchedule(totalSteps, restSeconds, totalSeconds);
+  const { steps: schedule, durations } = buildSchedule(totalSteps, restSeconds, totalSeconds, lastExerciseDuration);
 
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
   const [isActive, setIsActive] = useState(true);

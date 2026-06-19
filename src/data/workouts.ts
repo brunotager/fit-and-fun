@@ -1,119 +1,174 @@
-export const workouts = [
+export interface Workout {
+    id: string;
+    category: 'Cardio' | 'Strength' | 'Mobility';
+    duration: number;
+    points: number;
+    steps: string[];
+    gifUrls?: string[];  // parallel to steps — gifUrls[i] is the demo GIF for steps[i]
+}
+
+/**
+ * Curated Level 1 Plan — 7 days, 5-minute workouts, 5 exercises each.
+ * 
+ * GIF files go in /public/exercises/ as:
+ *   /exercises/march-in-place.gif
+ *   /exercises/jumping-jacks.gif
+ *   etc.
+ * 
+ * Rotation: Cardio → Strength → Mobility → Cardio → Strength → Mobility → Full Body
+ */
+export const workouts: Workout[] = [
+    // ── Day 1: Cardio ──────────────────────────────────────────────
     {
-        id: "cardio_5",
+        id: "level1_day1",
         category: "Cardio",
         duration: 5,
-        points: 15,
+        points: 50,
         steps: [
-            "March in place – 1 min",
-            "Jumping jacks – 1 min",
-            "High knees – 1 min",
-            "Fast walk in place – 1 min",
-            "Cool down breathing – 1 min"
+            "March in Place – 1 min",
+            "Jumping Jacks – 1 min",
+            "High Knees – 1 min",
+            "Butt Kicks – 1 min",
+            "Cool Down Breathing – 20 sec"
+        ],
+        gifUrls: [
+            "/exercises/march-in-place.gif",
+            "/coach-gabi-jumping-jacks.mp4",
+            "/coach-gabi-high-knees.mp4",
+            "/exercises/butt-kicks.gif",
+            "/coach-gabi-breathing.mp4"
         ]
     },
+
+    // ── Day 2: Strength ────────────────────────────────────────────
     {
-        id: "cardio_10",
-        category: "Cardio",
-        duration: 10,
-        points: 30,
-        steps: [
-            "March in place – 2 min",
-            "Jumping jacks – 2 min",
-            "High knees – 2 min",
-            "Fast walk in place – 2 min",
-            "Cool down breathing – 2 min"
-        ]
-    },
-    {
-        id: "cardio_20",
-        category: "Cardio",
-        duration: 20,
-        points: 60,
-        steps: [
-            "March in place – 4 min",
-            "Jumping jacks – 4 min",
-            "High knees – 4 min",
-            "Fast walk in place – 4 min",
-            "Cool down breathing – 4 min"
-        ]
-    },
-    {
-        id: "strength_5",
+        id: "level1_day2",
         category: "Strength",
         duration: 5,
-        points: 15,
+        points: 50,
         steps: [
-            "Bodyweight squats – 1 min",
-            "Wall push-ups – 1 min",
-            "Standing lunges – 1 min",
-            "Plank hold – 1 min",
-            "Stretch – 1 min"
+            "Bodyweight Squats – 1 min",
+            "Wall Push-ups – 1 min",
+            "Glute Bridges – 1 min",
+            "Plank Hold – 1 min",
+            "Stretch – 20 sec"
+        ],
+        gifUrls: [
+            "/coach-gabi-body-squats.mp4",
+            "/coach-gabi-wall-pushups.mp4",
+            "/exercises/glute-bridges.gif",
+            "/exercises/plank-hold.gif",
+            "/coach-gabi-breathing.mp4"
         ]
     },
+
+    // ── Day 3: Mobility ────────────────────────────────────────────
     {
-        id: "strength_10",
-        category: "Strength",
-        duration: 10,
-        points: 30,
-        steps: [
-            "Bodyweight squats – 2 min",
-            "Wall push-ups – 2 min",
-            "Standing lunges – 2 min",
-            "Plank hold – 2 min",
-            "Stretch – 2 min"
-        ]
-    },
-    {
-        id: "strength_20",
-        category: "Strength",
-        duration: 20,
-        points: 60,
-        steps: [
-            "Bodyweight squats – 4 min",
-            "Wall push-ups – 4 min",
-            "Standing lunges – 4 min",
-            "Plank hold – 4 min",
-            "Stretch – 4 min"
-        ]
-    },
-    {
-        id: "mobility_5",
+        id: "level1_day3",
         category: "Mobility",
         duration: 5,
-        points: 15,
+        points: 50,
         steps: [
-            "Neck rolls – 1 min",
-            "Shoulder circles – 1 min",
-            "Hip openers – 1 min",
-            "Hamstring stretch – 1 min",
-            "Breathing – 1 min"
+            "Neck Rolls – 1 min",
+            "Shoulder Circles – 1 min",
+            "Hip Circles – 1 min",
+            "Hamstring Stretch – 1 min",
+            "Deep Breathing – 20 sec"
+        ],
+        gifUrls: [
+            "/exercises/neck-rolls.gif",
+            "/exercises/shoulder-circles.gif",
+            "/exercises/hip-circles.gif",
+            "/exercises/hamstring-stretch.gif",
+            "/coach-gabi-breathing.mp4"
         ]
     },
+
+    // ── Day 4: Cardio ──────────────────────────────────────────────
     {
-        id: "mobility_10",
-        category: "Mobility",
-        duration: 10,
-        points: 30,
+        id: "level1_day4",
+        category: "Cardio",
+        duration: 5,
+        points: 50,
         steps: [
-            "Neck rolls – 2 min",
-            "Shoulder circles – 2 min",
-            "Hip openers – 2 min",
-            "Hamstring stretch – 2 min",
-            "Breathing – 2 min"
+            "Step Jacks – 1 min",
+            "Skater Hops – 1 min",
+            "High Knees – 1 min",
+            "Jumping Jacks – 1 min",
+            "Cool Down Breathing – 20 sec"
+        ],
+        gifUrls: [
+            "/exercises/step-jacks.gif",
+            "/exercises/skater-hops.gif",
+            "/coach-gabi-high-knees.mp4",
+            "/coach-gabi-jumping-jacks.mp4",
+            "/coach-gabi-breathing.mp4"
         ]
     },
+
+    // ── Day 5: Strength ────────────────────────────────────────────
     {
-        id: "mobility_20",
-        category: "Mobility",
-        duration: 20,
-        points: 60,
+        id: "level1_day5",
+        category: "Strength",
+        duration: 5,
+        points: 50,
         steps: [
-            "Neck rolls – 4 min",
-            "Shoulder circles – 4 min",
-            "Hip openers – 4 min",
-            "Hamstring stretch – 4 min",
-            "Breathing – 4 min"
+            "Standing Lunges – 1 min",
+            "Calf Raises – 1 min",
+            "Bird Dog – 1 min",
+            "Side Plank Hold – 1 min",
+            "Stretch – 20 sec"
+        ],
+        gifUrls: [
+            "/exercises/standing-lunges.gif",
+            "/exercises/calf-raises.gif",
+            "/exercises/bird-dog.gif",
+            "/exercises/side-plank-hold.gif",
+            "/coach-gabi-breathing.mp4"
+        ]
+    },
+
+    // ── Day 6: Mobility ────────────────────────────────────────────
+    {
+        id: "level1_day6",
+        category: "Mobility",
+        duration: 5,
+        points: 50,
+        steps: [
+            "Cat-Cow Stretch – 1 min",
+            "Torso Twists – 1 min",
+            "Quad Stretch – 1 min",
+            "Child's Pose – 1 min",
+            "Deep Breathing – 20 sec"
+        ],
+        gifUrls: [
+            "/exercises/cat-cow-stretch.gif",
+            "/exercises/torso-twists.gif",
+            "/exercises/quad-stretch.gif",
+            "/exercises/childs-pose.gif",
+            "/coach-gabi-breathing.mp4"
+        ]
+    },
+
+    // ── Day 7: Full Body ───────────────────────────────────────────
+    {
+        id: "level1_day7",
+        category: "Strength",
+        duration: 5,
+        points: 50,
+        steps: [
+            "Bodyweight Squats – 1 min",
+            "Jumping Jacks – 1 min",
+            "Wall Push-ups – 1 min",
+            "Plank Hold – 1 min",
+            "Cool Down Breathing – 20 sec"
+        ],
+        gifUrls: [
+            "/coach-gabi-body-squats.mp4",
+            "/coach-gabi-jumping-jacks.mp4",
+            "/coach-gabi-wall-pushups.mp4",
+            "/exercises/plank-hold.gif",
+            "/coach-gabi-breathing.mp4"
         ]
     }
 ];

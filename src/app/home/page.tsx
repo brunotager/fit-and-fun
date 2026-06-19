@@ -28,7 +28,7 @@ export default function HomePage() {
                 <div className="relative z-20 mt-[-30px] mb-8 flex flex-col items-center">
                     <button
                         onClick={() => router.push('/workouts')}
-                        className="w-24 h-24 rounded-full bg-brand-500 text-white font-black text-xs shadow-[0_8px_30px_rgb(249,115,22,0.4)] hover:bg-brand-600 hover:scale-105 active:scale-95 transition-all duration-300 flex flex-col items-center justify-center leading-tight ring-4 ring-white mb-3"
+                        className="w-24 h-24 rounded-full bg-brand-500 text-white font-black text-xs shadow-[0_8px_30px_rgb(232,106,32,0.25)] hover:bg-brand-600 hover:scale-105 active:scale-95 transition-all duration-300 flex flex-col items-center justify-center leading-tight ring-4 ring-white mb-3"
                     >
                         <span className="mb-0.5">START</span>
                         <span>WORKOUT</span>

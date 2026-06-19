@@ -11,7 +11,7 @@ import { ConnectDeviceModal } from '@/components/ConnectDeviceModal';
 import { HelpModal, NotificationsModal, AboutModal, ResetProgressModal } from '@/components/SettingsModals';
 
 export default function SettingsPage() {
-    const { profile, resetProgress } = useFitFun();
+    const { profile, resetProgress, notificationsEnabled, updateProfile } = useFitFun();
     const router = useRouter();
     const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
     const [isHelpOpen, setHelpOpen] = useState(false);
@@ -23,7 +23,7 @@ export default function SettingsPage() {
         resetProgress();
     };
 
-    const MenuItem = ({ icon: Icon, label, onClick, showCaret = true }: { icon: any, label: string, onClick?: () => void, showCaret?: boolean }) => (
+    const MenuItem = ({ icon: Icon, label, onClick, showCaret = true, secondaryLabel }: { icon: any, label: string, onClick?: () => void, showCaret?: boolean, secondaryLabel?: string }) => (
         <div 
             onClick={onClick}
             className="flex justify-between items-center py-4 border-b border-stone-200/50 last:border-b-0 cursor-pointer group"
@@ -32,7 +32,14 @@ export default function SettingsPage() {
                 <Icon size={24} strokeWidth={1.5} className="text-stone-400 group-hover:text-stone-800 transition-colors" />
                 <span className="font-semibold text-[15px]">{label}</span>
             </div>
-            {showCaret && <ChevronRight size={20} className="text-stone-300 group-hover:text-stone-500 transition-colors" />}
+            <div className="flex items-center gap-2">
+                {secondaryLabel && (
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-wide">
+                        {secondaryLabel}
+                    </span>
+                )}
+                {showCaret && <ChevronRight size={20} className="text-stone-300 group-hover:text-stone-500 transition-colors" />}
+            </div>
         </div>
     );
 
@@ -56,7 +63,18 @@ export default function SettingsPage() {
             <div className="px-6">
                 <div className="bg-[#F8F6F3] rounded-[24px] p-2 shadow-sm">
                     <div className="px-5">
-                        <MenuItem icon={Watch} label="Connected devices" onClick={() => setIsDeviceModalOpen(true)} />
+                        <MenuItem 
+                            icon={Watch} 
+                            label="Connected devices" 
+                            onClick={() => setIsDeviceModalOpen(true)} 
+                            secondaryLabel={profile.connectedDevice ? (
+                                profile.connectedDevice === 'apple' ? 'Apple Health' :
+                                profile.connectedDevice === 'garmin' ? 'Garmin Watch' :
+                                profile.connectedDevice === 'oura' ? 'Oura Ring' :
+                                profile.connectedDevice === 'whoop' ? 'Whoop 5.0' :
+                                profile.connectedDevice
+                            ) : undefined}
+                        />
                         <MenuItem icon={HelpCircle} label="Help" onClick={() => setHelpOpen(true)} />
                         <MenuItem icon={Bell} label="Notifications" onClick={() => setNotifOpen(true)} />
                         <MenuItem icon={Info} label="About us" onClick={() => setAboutOpen(true)} />
@@ -68,6 +86,8 @@ export default function SettingsPage() {
             <ConnectDeviceModal 
                 isOpen={isDeviceModalOpen} 
                 onClose={() => setIsDeviceModalOpen(false)} 
+                connectedDevice={profile.connectedDevice}
+                onConnect={(deviceId) => updateProfile({ connectedDevice: deviceId || undefined })}
             />
             <HelpModal isOpen={isHelpOpen} onClose={() => setHelpOpen(false)} />
             <NotificationsModal isOpen={isNotifOpen} onClose={() => setNotifOpen(false)} />

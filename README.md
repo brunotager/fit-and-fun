@@ -1,15 +1,20 @@
 # Fit & Fun
 
-Fit & Fun is a frictionless, gamified 7-day guided fitness journey built with a focus on high-trust UX and maintaining user engagement. 
+Fit & Fun is a frictionless, gamified fitness journey built with a focus on high-trust UX, levels-based progression, and maintaining user engagement. 
 
-Designed to remove barriers to entry, the app features minimal onboarding, quick workouts capped at 10 minutes, and a dynamic visual progress map to keep you motivated throughout your week.
+Designed to remove barriers to entry, the app features a simplified 5-step onboarding flow, daily workouts, and a dynamic visual progress map to keep you motivated throughout your journey.
 
 ## 🌟 Key Features
 
-- **Gamified 7-Day Journey:** A structured path to build consistency and momentum.
-- **Frictionless Onboarding:** Jump straight into the action without unnecessary data collection (no age or gender requirements).
+- **Frictionless Onboarding:** Jump straight into the action without unnecessary data collection. The questionnaire is reduced to the absolute essentials (Name, Height, and Weight) with no age or gender requirements.
+- **Levels-Based Progression:** Standardized levels keep you progressing without analysis paralysis:
+  - **Level 1:** 5-minute daily bodyweight workouts (No equipment needed, the initial 7-day journey)
+  - **Level 2:** 10-minute daily workouts (Coming soon)
+  - **Level 3:** 15-minute daily workouts (Coming soon)
+  - **Level 4:** 20-minute daily workouts (Coming soon)
+  - *You must complete each 7-day level before you can unlock the next one!*
+- **ExerciseDB V1 API Integration:** Dynamic workout steps are sourced from the free ExerciseDB V1 (AscendAPI) bodyweight database, giving you genuine equipment-free routines with zero-cost and high variety.
 - **Interactive Progress Map:** An engaging SVG-based roadmap with animated paths and interactive nodes to track your daily completions.
-- **Bite-Sized Workouts:** All sessions are capped at 10 minutes or less to ensure they easily fit into any schedule.
 - **High-Trust UX:** Clean design, dynamic messaging, and smooth transitions that inspire confidence and keep you engaged.
 - **Settings & Progression Control:** Manage your journey, connect devices, or easily reset your plan when you need a fresh start.
 
@@ -40,6 +45,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `src/lib/`: Core utilities and logic, including the `planEngine` for workout generation.
 - `src/hooks/`: Custom React hooks like `useWorkoutLogic` for managing workout states.
 
-## 🤝 Contributing
+## 🤝 Contributing & License
 
-Contributions are always welcome! Feel free to open an issue or submit a pull request if you have ideas for new features or improvements.
+Contributions are always welcome! Exercise dataset is provided under open license by [AscendAPI](https://ascendapi.com).

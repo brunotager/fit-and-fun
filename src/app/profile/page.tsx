@@ -9,12 +9,12 @@ import {
     ChevronLeft, Camera, Ruler, Scale, User, 
     HeartPulse, Moon, Footprints, ChevronDown, ChevronUp 
 } from 'lucide-react';
-import type { ActivityLevel, FitnessGoal } from '@/context/FitFunContext';
+
 import { Header } from '@/components/Header';
 import { ConnectDeviceModal } from '@/components/ConnectDeviceModal';
 import { convertWeight, convertHeight } from '@/lib/conversions';
 
-type ExpandingField = 'height' | 'weight' | 'activityLevel' | 'fitnessGoal' | null;
+type ExpandingField = 'height' | 'weight' | null;
 
 export default function ProfilePage() {
     const { profile, updateProfile, updateProgressState } = useFitFun();
@@ -22,7 +22,6 @@ export default function ProfilePage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [expandedField, setExpandedField] = useState<ExpandingField>(null);
     const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
-    const [showResetModal, setShowResetModal] = useState(false);
 
     const [editValues, setEditValues] = useState({
         name: profile.name || '',
@@ -31,8 +30,6 @@ export default function ProfilePage() {
         heightUnit: profile.heightUnit || 'ft/in',
         weightNum: profile.weight || '',
         weightUnit: profile.weightUnit || 'lbs',
-        activityLevel: profile.activityLevel || '',
-        fitnessGoal: profile.fitnessGoal || '',
     });
 
     // Re-sync edit values when profile loads/changes (fixes stale-mount bug)
@@ -44,10 +41,8 @@ export default function ProfilePage() {
             heightUnit: profile.heightUnit || 'ft/in',
             weightNum: profile.weight || '',
             weightUnit: profile.weightUnit || 'lbs',
-            activityLevel: profile.activityLevel || '',
-            fitnessGoal: profile.fitnessGoal || '',
         });
-    }, [profile.name, profile.heightPrimary, profile.heightSecondary, profile.heightUnit, profile.weight, profile.weightUnit, profile.activityLevel, profile.fitnessGoal]);
+    }, [profile.name, profile.heightPrimary, profile.heightSecondary, profile.heightUnit, profile.weight, profile.weightUnit]);
 
     // Helper to toggle expansion
     const toggleExpand = (field: ExpandingField) => {
@@ -55,18 +50,10 @@ export default function ProfilePage() {
     };
 
     const handleSave = () => {
-        // Prompt if core generation params change
-        if (
-            (editValues.activityLevel && editValues.activityLevel !== profile.activityLevel) ||
-            (editValues.fitnessGoal && editValues.fitnessGoal !== profile.fitnessGoal)
-        ) {
-            setShowResetModal(true);
-            return;
-        }
         executeSave();
     };
 
-    const executeSave = (resetPlan = false) => {
+    const executeSave = () => {
         updateProfile({
             name: editValues.name,
             heightPrimary: Number(editValues.heightPrimary) || undefined,
@@ -74,16 +61,9 @@ export default function ProfilePage() {
             heightUnit: editValues.heightUnit,
             weight: Number(editValues.weightNum) || undefined,
             weightUnit: editValues.weightUnit,
-            activityLevel: editValues.activityLevel as ActivityLevel,
-            fitnessGoal: editValues.fitnessGoal as FitnessGoal,
         });
 
-        if (resetPlan) {
-            updateProgressState({ currentPlanDay: 1 });
-        }
-
         setExpandedField(null);
-        setShowResetModal(false);
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,7 +123,7 @@ export default function ProfilePage() {
                         <div className="mt-4 flex justify-end">
                             <button 
                                 onClick={handleSave}
-                                className="bg-brand-500 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-brand-600 transition-colors"
+                                className="bg-brand-500 text-white px-6 py-2 rounded-[20px] font-bold text-sm hover:bg-brand-600 transition-colors"
                             >
                                 Save
                             </button>
@@ -161,7 +141,7 @@ export default function ProfilePage() {
             {/* Profile Avatar Section */}
             <div className="flex flex-col items-center mt-2 mb-10 px-6 relative">
                 <div 
-                    className="relative w-36 h-36 rounded-full bg-stone-100 flex items-center justify-center shadow-sm cursor-pointer overflow-hidden border-4 border-white mb-6 group"
+                    className="relative w-36 h-36 rounded-[20px] bg-stone-100 flex items-center justify-center shadow-md cursor-pointer overflow-hidden border-4 border-stone-200 mb-6 group"
                     onClick={() => fileInputRef.current?.click()}
                 >
                     {profile.profileImage ? (
@@ -208,7 +188,7 @@ export default function ProfilePage() {
                 <div>
                     <h3 className="text-xs font-bold tracking-[0.15em] text-stone-900 mb-4 ml-2 text-center">PHYSICAL</h3>
                     
-                    <div className="bg-[#F8F6F3] rounded-[24px] p-5 shadow-sm">
+                    <div className="bg-[#F8F6F3] rounded-[20px] p-5 shadow-sm">
 
                         {/* Height Row */}
                         {renderRow(
@@ -219,7 +199,7 @@ export default function ProfilePage() {
                                 : undefined,
                             'height',
                             () => (
-                                <div className="flex flex-col gap-3 bg-white p-3 rounded-xl border border-stone-200">
+                                <div className="flex flex-col gap-3 bg-white p-3 rounded-[20px] border border-stone-200">
                                     <div className="flex bg-stone-100 rounded-lg p-1.5 w-full">
                                         {['ft/in', 'm/cm'].map(unit => (
                                             <button
@@ -268,7 +248,7 @@ export default function ProfilePage() {
                                     </div>
                                     <button 
                                         onClick={handleSave}
-                                        className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 rounded-lg text-sm mt-1 transition-colors"
+                                        className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 rounded-[20px] text-sm mt-1 transition-colors"
                                     >
                                         Save Changes
                                     </button>
@@ -283,7 +263,7 @@ export default function ProfilePage() {
                             profile.weight ? `${profile.weight} ${profile.weightUnit || 'lbs'}` : undefined,
                             'weight',
                             () => (
-                                <div className="flex flex-col gap-3 bg-white p-3 rounded-xl border border-stone-200">
+                                <div className="flex flex-col gap-3 bg-white p-3 rounded-[20px] border border-stone-200">
                                     <div className="flex bg-stone-100 rounded-lg p-1.5 w-full">
                                         {['lbs', 'kg'].map(unit => (
                                             <button
@@ -315,7 +295,7 @@ export default function ProfilePage() {
                                     </div>
                                     <button 
                                         onClick={handleSave}
-                                        className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 rounded-lg text-sm mt-1 transition-colors"
+                                        className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 rounded-[20px] text-sm mt-1 transition-colors"
                                     >
                                         Save Changes
                                     </button>
@@ -323,69 +303,7 @@ export default function ProfilePage() {
                             )
                         )}
 
-                        {/* Activity Level Row */}
-                        {renderRow(
-                            <Footprints size={22} strokeWidth={1.5} />,
-                            "Activity Level",
-                            profile.activityLevel,
-                            'activityLevel',
-                            () => {
-                                const levels = [
-                                    { id: 'Sedentary', title: 'Sedentary', desc: 'Little to no formal exercise and a mostly seated daily routine.' },
-                                    { id: 'Lightly Active', title: 'Lightly Active', desc: 'Light exercise 1-3 days a week, or a daily routine involving walking and standing.' },
-                                    { id: 'Moderately Active', title: 'Moderately Active', desc: 'Moderate exercise 3-5 days a week, or a consistently active daily routine.' },
-                                    { id: 'Very Active', title: 'Very Active', desc: 'Heavy exercise 6-7 days a week, or intense physical training and high daily activity.' },
-                                ];
 
-                                return (
-                                    <div className="flex flex-col gap-2 bg-white p-2 rounded-xl border border-stone-200 mt-2">
-                                        {levels.map(level => (
-                                            <button 
-                                                key={level.id}
-                                                onClick={() => setEditValues(prev => ({...prev, activityLevel: level.id}))}
-                                                className={`p-3 rounded-lg text-left transition-colors flex flex-col gap-1 ${
-                                                    editValues.activityLevel === level.id 
-                                                        ? 'bg-brand-500 text-white' 
-                                                        : 'bg-stone-50 text-stone-700 hover:bg-stone-100'
-                                                }`}
-                                            >
-                                                <span className="text-sm font-bold">{level.title}</span>
-                                                <span className={`text-[13px] font-medium leading-relaxed ${
-                                                    editValues.activityLevel === level.id ? 'text-white/90' : 'text-stone-500'
-                                                }`}>
-                                                    {level.desc}
-                                                </span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                );
-                            }
-                        )}
-                        
-                        {/* Fitness Goal Row */}
-                        {renderRow(
-                            <HeartPulse size={22} strokeWidth={1.5} />,
-                            "Fitness Goal",
-                            profile.fitnessGoal,
-                            'fitnessGoal',
-                            () => (
-                                <div className="flex flex-col gap-2 bg-white p-2 rounded-xl border border-stone-200">
-                                    {['Weight loss', 'Muscle gain', 'Maintain weight'].map(opt => (
-                                        <button
-                                            key={opt}
-                                            onClick={() => setEditValues(prev => ({...prev, fitnessGoal: opt}))}
-                                            className={`p-3 rounded-lg text-left text-sm font-bold transition-colors ${
-                                                editValues.fitnessGoal === opt 
-                                                    ? 'bg-brand-500 text-white' 
-                                                    : 'bg-stone-50 text-stone-700 hover:bg-stone-100'
-                                            }`}
-                                        >
-                                            {opt}
-                                        </button>
-                                    ))}
-                                </div>
-                            )
-                        )}
                     </div>
                 </div>
 
@@ -393,7 +311,30 @@ export default function ProfilePage() {
                 <div>
                     <h3 className="text-xs font-bold tracking-[0.15em] text-stone-900 mb-4 ml-2 text-center">PERSONAL</h3>
                     
-                    <div className="bg-[#F8F6F3] rounded-[24px] p-5 shadow-sm space-y-1">
+                    <div className="bg-[#F8F6F3] rounded-[20px] p-5 shadow-sm space-y-1">
+                        <div 
+                            className="flex justify-between items-center py-3 cursor-pointer group"
+                            onClick={() => setIsDeviceModalOpen(true)}
+                        >
+                            <div className="flex items-center gap-4 text-stone-700">
+                                <HeartPulse size={22} strokeWidth={1.5} className="text-stone-400 group-hover:text-brand-500 transition-colors" />
+                                <span className="font-medium text-[15px]">Connected Device</span>
+                            </div>
+                            {profile.connectedDevice ? (
+                                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-wide">
+                                    {profile.connectedDevice === 'apple' ? 'Apple Health' :
+                                     profile.connectedDevice === 'garmin' ? 'Garmin Watch' :
+                                     profile.connectedDevice === 'oura' ? 'Oura Ring' :
+                                     profile.connectedDevice === 'whoop' ? 'Whoop 5.0' :
+                                     profile.connectedDevice}
+                                </span>
+                            ) : (
+                                <span className="text-xs font-bold text-brand-500 bg-brand-50 px-3 py-1 rounded-full uppercase tracking-wide group-hover:bg-brand-100 transition-colors">Connect</span>
+                            )}
+                        </div>
+
+                        <div className="border-t border-stone-200/50 my-1"></div>
+
                         <div 
                             className="flex justify-between items-center py-3 cursor-pointer group"
                             onClick={() => setIsDeviceModalOpen(true)}
@@ -437,35 +378,11 @@ export default function ProfilePage() {
             <ConnectDeviceModal 
                 isOpen={isDeviceModalOpen} 
                 onClose={() => setIsDeviceModalOpen(false)} 
+                connectedDevice={profile.connectedDevice}
+                onConnect={(deviceId) => updateProfile({ connectedDevice: deviceId || undefined })}
             />
 
-            {/* Reset Warning Modal */}
-            {showResetModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
-                        <div className="flex flex-col items-centertext-center mb-6 mt-2">
-                            <h2 className="text-2xl font-black text-gray-900 tracking-tight text-center uppercase mb-3">Embrace a New Journey!</h2>
-                            <p className="text-[16px] text-stone-600 font-medium leading-relaxed text-center">
-                                Updating your fitness goal will generate a brand new <span className="font-bold text-brand-600">7-Day Plan</span> and reset your active day to Day 1. Are you ready?
-                            </p>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <button 
-                                onClick={() => executeSave(true)}
-                                className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-xl transition-colors shadow-md active:scale-95 text-lg"
-                            >
-                                Let's Do This!
-                            </button>
-                            <button 
-                                onClick={() => setShowResetModal(false)}
-                                className="w-full bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold py-4 rounded-xl transition-colors active:scale-95 text-lg"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Reset Warning Modal is removed as the Level 1 plan is standardized and physical profile updates do not reset progression. */}
         </div>
     );
 }

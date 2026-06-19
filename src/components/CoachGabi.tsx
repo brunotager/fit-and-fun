@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { useFitFun } from '@/context/FitFunContext';
+import { getItemById } from '@/data/shopItems';
 import { motion } from 'framer-motion';
 
 type CoachVariant = 'welcome' | 'celebrate' | 'motivate' | 'comfort' | 'neutral';
@@ -20,14 +21,23 @@ export const CoachGabi: React.FC<CoachGabiProps> = ({
     className = '',
     forceState = false
 }) => {
-    const { progress, logs } = useFitFun();
+    const { progress, logs, wardrobe } = useFitFun();
 
-    // Determine Image
+    // Determine Image — check for equipped jersey first
     let imageSrc = '/gabi-wave-right-v2.png'; // Default
-    if (variant === 'celebrate') imageSrc = '/gabi-celebrate-v2.png';
-    if (variant === 'welcome' || variant === 'neutral') imageSrc = '/gabi-wave-left-v2.png';
-    if (variant === 'motivate') imageSrc = '/gabi-wave-right-v2.png';
-    if (variant === 'comfort') imageSrc = '/gabi-wave-left-v2.png';
+    const equippedJerseyId = wardrobe.equipped.jersey;
+    if (equippedJerseyId) {
+        const jerseyItem = getItemById(equippedJerseyId);
+        if (jerseyItem) {
+            // Use celebrate pose for celebrate variant, wave-right for everything else
+            imageSrc = variant === 'celebrate' ? jerseyItem.gabiCelebrateImage : jerseyItem.gabiImage;
+        }
+    } else {
+        if (variant === 'celebrate') imageSrc = '/gabi-celebrate-v2.png';
+        if (variant === 'welcome' || variant === 'neutral') imageSrc = '/gabi-wave-left-v2.png';
+        if (variant === 'motivate') imageSrc = '/gabi-wave-right-v2.png';
+        if (variant === 'comfort') imageSrc = '/gabi-wave-left-v2.png';
+    }
 
     // Determine Message
     let message = customMessage;
@@ -71,11 +81,12 @@ export const CoachGabi: React.FC<CoachGabiProps> = ({
                     src={imageSrc}
                     alt="Coach Gabi"
                     fill
+                    unoptimized
                     className="object-contain"
                     priority
                 />
             </div>
-            <div className="bg-white border-2 border-brand-100 rounded-2xl p-4 shadow-sm relative max-w-xs">
+            <div className="bg-white border-2 border-brand-100 rounded-[20px] p-4 shadow-sm relative max-w-xs">
                 {/* Speech bubble trial */}
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-t-2 border-l-2 border-brand-100 transform rotate-45 z-10"></div>
                 <p className="text-brand-600 font-medium text-lg leading-relaxed">

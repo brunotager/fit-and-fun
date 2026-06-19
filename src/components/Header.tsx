@@ -85,7 +85,7 @@ export function Header({ title, showLogo, showBack, backTo, onBack, className = 
                             className="fixed inset-0 z-40 cursor-default" 
                             onClick={() => setMenuOpen(false)}
                         />
-                        <div className="absolute top-12 right-0 w-48 bg-white rounded-xl shadow-lg z-50 border border-stone-100 overflow-hidden">
+                        <div className="absolute top-12 right-0 w-48 bg-white rounded-[20px] shadow-lg z-50 border border-stone-100 overflow-hidden">
                             <Link 
                                 href="/profile" 
                                 className="block px-4 py-3 text-stone-700 font-medium hover:bg-stone-50 transition-colors border-b border-stone-50"

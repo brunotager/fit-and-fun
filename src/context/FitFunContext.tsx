@@ -1,17 +1,16 @@
 'use client';
 
 
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { updateProgress, checkBadges } from '@/lib/progressEngine';
-import { workouts } from '@/data/workouts';
+import { workouts, type Workout } from '@/data/workouts';
 import { ToastContainer, ToastMessage } from '@/components/Toast';
+import { getItemById, type ItemCategory } from '@/data/shopItems';
+
 
 // --- Types ---
 
 export type GoalType = 'cardio' | 'strength' | 'mobility';
-
-export type ActivityLevel = 'Sedentary' | 'Lightly Active' | 'Moderately Active' | 'Very Active' | '';
-export type FitnessGoal = 'Weight loss' | 'Muscle gain' | 'Maintain weight' | '';
 
 export interface Profile {
   name: string;
@@ -27,8 +26,10 @@ export interface Profile {
   heightUnit?: 'ft/in' | 'm/cm';
   weight?: number;
   weightUnit?: 'lbs' | 'kg';
-  activityLevel?: ActivityLevel;
-  fitnessGoal?: FitnessGoal;
+
+  // Waitlist and Wearables integrations
+  waitlistEmail?: string;
+  connectedDevice?: string;
 }
 
 export interface WorkoutLog {
@@ -45,12 +46,33 @@ export interface WorkoutLog {
 export interface Progress {
   totalPoints: number; // Renamed from points
   points: number; // Kept for backward compatibility if needed, but we should migrate
+  totalPointsSpent: number; // Total points spent in the shop
   workoutsCompleted: number; // New field
   currentPlanDay: number;
   currentStreak: number;
   lastWorkoutDate: string | null; // "YYYY-MM-DD"
   badges: string[];
 }
+
+// --- Wardrobe Types ---
+
+export interface Wardrobe {
+  ownedItems: string[];       // array of item IDs the user has purchased
+  equipped: {
+    jersey: string | null;    // equipped item ID or null
+    shoes: string | null;
+    accessory: string | null;
+  };
+}
+
+const INITIAL_WARDROBE: Wardrobe = {
+  ownedItems: [],
+  equipped: {
+    jersey: null,
+    shoes: null,
+    accessory: null,
+  },
+};
 
 interface FitFunContextType {
   userId: string;
@@ -63,6 +85,8 @@ interface FitFunContextType {
   logOut: () => void;
   updateProgressState: (data: Partial<Progress>) => void;
   isLoading: boolean;
+  workoutPlan: Workout[];
+  isPlanLoading: boolean;
   toasts: ToastMessage[];
   dismissToast: (id: string) => void;
   notificationsEnabled: boolean;
@@ -71,6 +95,12 @@ interface FitFunContextType {
   setReminderTime: (time: string) => void;
   notificationPromptCount: number;
   incrementNotificationPromptCount: () => void;
+  // Wardrobe / Shop
+  wardrobe: Wardrobe;
+  availablePoints: number;
+  purchaseItem: (itemId: string) => boolean;
+  equipItem: (itemId: string) => void;
+  unequipItem: (category: ItemCategory) => void;
 }
 
 // --- Constants ---
@@ -88,6 +118,7 @@ const INITIAL_PROFILE: Profile = {
 const INITIAL_PROGRESS: Progress = {
   totalPoints: 0,
   points: 0,
+  totalPointsSpent: 0,
   workoutsCompleted: 0,
   currentPlanDay: 1,
   currentStreak: 0,
@@ -113,6 +144,16 @@ interface PendingSync {
   timestamp: number;
 }
 
+function generateId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 function loadPendingSyncs(): PendingSync[] {
   try {
     const raw = localStorage.getItem('fitfun_pending_syncs');
@@ -128,7 +169,7 @@ function savePendingSyncs(syncs: PendingSync[]) {
 
 function addPendingSync(url: string, body: object) {
   const syncs = loadPendingSyncs();
-  syncs.push({ id: crypto.randomUUID(), url, body, timestamp: Date.now() });
+  syncs.push({ id: generateId(), url, body, timestamp: Date.now() });
   savePendingSyncs(syncs);
 }
 
@@ -147,10 +188,13 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState<Progress>(INITIAL_PROGRESS);
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [workoutPlan, setWorkoutPlan] = useState<Workout[]>([]);
+  const [isPlanLoading, setIsPlanLoading] = useState(true);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
   const [reminderTime, setReminderTimeState] = useState('09:00');
   const [notificationPromptCount, setNotificationPromptCount] = useState(0);
+  const [wardrobe, setWardrobe] = useState<Wardrobe>(INITIAL_WARDROBE);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -175,7 +219,7 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
 
   // Toast helpers
   const addToast = useCallback((text: string, type: 'error' | 'success' = 'error') => {
-    const id = crypto.randomUUID();
+    const id = generateId();
     setToasts(prev => [...prev.slice(-2), { id, text, type }]); // max 3 visible
   }, []);
 
@@ -239,7 +283,7 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let savedUserId = localStorage.getItem('fitfun_user_id');
     if (!savedUserId) {
-      savedUserId = crypto.randomUUID();
+      savedUserId = generateId();
       localStorage.setItem('fitfun_user_id', savedUserId);
     }
     setUserId(savedUserId);
@@ -247,6 +291,7 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     const savedProfile = localStorage.getItem('fitfun_profile');
     const savedProgress = localStorage.getItem('fitfun_progress');
     const savedLogs = localStorage.getItem('fitfun_workouts_log');
+    const savedWardrobe = localStorage.getItem('fitfun_wardrobe');
 
     if (savedProfile) setProfile(JSON.parse(savedProfile));
     if (savedProgress) {
@@ -256,9 +301,11 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
         ...loaded,
         currentPlanDay: loaded.currentPlanDay ?? 1,
         totalPoints: loaded.totalPoints ?? loaded.points ?? 0,
+        totalPointsSpent: loaded.totalPointsSpent ?? 0,
         workoutsCompleted: loaded.workoutsCompleted ?? 0
       });
     }
+    if (savedWardrobe) setWardrobe(JSON.parse(savedWardrobe));
     if (savedLogs) setLogs(JSON.parse(savedLogs));
 
     // Load notification preferences
@@ -278,9 +325,22 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('fitfun_profile', JSON.stringify(profile));
     localStorage.setItem('fitfun_progress', JSON.stringify(progress));
     localStorage.setItem('fitfun_workouts_log', JSON.stringify(logs));
-  }, [profile, progress, logs, isLoading]);
+    localStorage.setItem('fitfun_wardrobe', JSON.stringify(wardrobe));
+  }, [profile, progress, logs, wardrobe, isLoading]);
 
-  const syncProfileToDB = useCallback((currentProfile: Profile, currentProgress: Progress, currentUserId: string) => {
+  // Load the curated Level 1 plan directly — no API calls needed
+  useEffect(() => {
+    if (isLoading) return;
+    setWorkoutPlan(workouts);
+    setIsPlanLoading(false);
+  }, [isLoading]);
+
+  const syncProfileToDB = useCallback((
+    currentProfile: Profile,
+    currentProgress: Progress,
+    currentUserId: string,
+    notificationsEnabled: boolean
+  ) => {
     if (!currentProfile.setupComplete || !currentUserId) return;
 
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -291,14 +351,15 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
         name: currentProfile.name,
         joinDate: currentProfile.joinDate,
         goalType: currentProfile.goalType,
-        fitnessGoal: currentProfile.fitnessGoal,
-        activityLevel: currentProfile.activityLevel,
         lastActiveDay: currentProgress.currentPlanDay,
         heightPrimary: currentProfile.heightPrimary,
         heightSecondary: currentProfile.heightSecondary,
         heightUnit: currentProfile.heightUnit,
         weight: currentProfile.weight,
         weightUnit: currentProfile.weightUnit,
+        notificationsEnabled,
+        waitlistEmail: currentProfile.waitlistEmail || null,
+        connectedDevice: currentProfile.connectedDevice || null,
       });
     }, 1500);
   }, [resilientFetch]);
@@ -306,8 +367,8 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
   // Watch for profile/progress changes to sync
   useEffect(() => {
     if (isLoading) return;
-    syncProfileToDB(profile, progress, userId);
-  }, [profile, progress.currentPlanDay, userId, isLoading, syncProfileToDB]);
+    syncProfileToDB(profile, progress, userId, notificationsEnabled);
+  }, [profile, progress.currentPlanDay, userId, isLoading, notificationsEnabled, syncProfileToDB]);
 
   const updateProfile = (data: Partial<Profile>) => {
     setProfile((prev) => ({ ...prev, ...data }));
@@ -316,6 +377,58 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
   const updateProgressState = (data: Partial<Progress>) => {
     setProgress((prev) => ({ ...prev, ...data }));
   };
+
+  // --- Wardrobe / Shop ---
+
+  const availablePoints = useMemo(() => {
+    return progress.totalPoints - (progress.totalPointsSpent || 0);
+  }, [progress.totalPoints, progress.totalPointsSpent]);
+
+  const purchaseItem = useCallback((itemId: string): boolean => {
+    const item = getItemById(itemId);
+    if (!item) return false;
+    if (wardrobe.ownedItems.includes(itemId)) return false; // already owned
+    if (availablePoints < item.price) return false; // can't afford
+
+    // Deduct points
+    setProgress(prev => ({
+      ...prev,
+      totalPointsSpent: (prev.totalPointsSpent || 0) + item.price,
+    }));
+
+    // Add to owned items
+    setWardrobe(prev => ({
+      ...prev,
+      ownedItems: [...prev.ownedItems, itemId],
+    }));
+
+    addToast(`Unlocked ${item.name}!`, 'success');
+    return true;
+  }, [wardrobe.ownedItems, availablePoints, addToast]);
+
+  const equipItem = useCallback((itemId: string) => {
+    const item = getItemById(itemId);
+    if (!item) return;
+    if (!wardrobe.ownedItems.includes(itemId)) return; // must own it
+
+    setWardrobe(prev => ({
+      ...prev,
+      equipped: {
+        ...prev.equipped,
+        [item.category]: itemId,
+      },
+    }));
+  }, [wardrobe.ownedItems]);
+
+  const unequipItem = useCallback((category: ItemCategory) => {
+    setWardrobe(prev => ({
+      ...prev,
+      equipped: {
+        ...prev.equipped,
+        [category]: null,
+      },
+    }));
+  }, []);
 
   const completeWorkout = (data: { type: GoalType; duration: number; points: number; calories: number; workoutId: string; completionType?: 'timer_finished' | 'manual_end' }) => {
     const now = new Date().toISOString();
@@ -326,7 +439,7 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     const earnedCalories = completionType === 'timer_finished' ? data.calories : 0;
 
     const newLog: WorkoutLog = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       date: now,
       type: data.type,
       duration: data.duration,
@@ -390,11 +503,21 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
     setProfile(INITIAL_PROFILE);
     setProgress(INITIAL_PROGRESS);
     setLogs([]);
+    setWardrobe(INITIAL_WARDROBE);
+    setNotificationsEnabledState(false);
+    setReminderTimeState('09:00');
+    setNotificationPromptCount(0);
+    setWorkoutPlan([]);
     localStorage.removeItem('fitfun_profile');
     localStorage.removeItem('fitfun_progress');
     localStorage.removeItem('fitfun_workouts_log');
     localStorage.removeItem('fitfun_user_id');
     localStorage.removeItem('fitfun_pending_syncs');
+    localStorage.removeItem('fitfun_notifications_enabled');
+    localStorage.removeItem('fitfun_reminder_time');
+    localStorage.removeItem('fitfun_notification_prompt_count');
+    localStorage.removeItem('fitfun_wardrobe');
+    localStorage.removeItem('fitfun_workout_plan');
     window.location.href = '/';
   };
 
@@ -415,6 +538,8 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
       logOut,
       updateProgressState,
       isLoading,
+      workoutPlan,
+      isPlanLoading,
       toasts,
       dismissToast,
       notificationsEnabled,
@@ -423,6 +548,11 @@ export function FitFunProvider({ children }: { children: React.ReactNode }) {
       setReminderTime,
       notificationPromptCount,
       incrementNotificationPromptCount,
+      wardrobe,
+      availablePoints,
+      purchaseItem,
+      equipItem,
+      unequipItem,
     }}>
       {children}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />

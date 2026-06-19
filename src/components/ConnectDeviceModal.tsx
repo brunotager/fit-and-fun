@@ -7,9 +7,11 @@ import { X, Heart, Watch, Circle, Activity } from 'lucide-react';
 interface ConnectDeviceModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onConnect?: (deviceId: string | null) => void;
+    connectedDevice?: string | null;
 }
 
-export function ConnectDeviceModal({ isOpen, onClose }: ConnectDeviceModalProps) {
+export function ConnectDeviceModal({ isOpen, onClose, onConnect, connectedDevice }: ConnectDeviceModalProps) {
     if (!isOpen) return null;
 
     const devices = [
@@ -30,7 +32,7 @@ export function ConnectDeviceModal({ isOpen, onClose }: ConnectDeviceModalProps)
                     />
                     <motion.div 
                         initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-                        className="bg-white rounded-3xl p-8 w-full max-w-xs shadow-2xl relative z-10 text-center"
+                        className="bg-white rounded-[20px] p-8 w-full max-w-xs shadow-2xl relative z-10 text-center"
                     >
                         <h3 className="text-xl font-black text-gray-900 mb-2">Connect Device</h3>
                         <p className="text-gray-500 text-sm mb-8 leading-relaxed">
@@ -40,16 +42,39 @@ export function ConnectDeviceModal({ isOpen, onClose }: ConnectDeviceModalProps)
                         <div className="flex flex-col gap-3 mb-6">
                             {devices.map((device) => {
                                 const Icon = device.icon;
+                                const isConnected = connectedDevice === device.id;
                                 return (
                                     <button
                                         key={device.id}
-                                        className="w-full flex items-center p-3 rounded-2xl border-2 border-stone-100 hover:border-brand-200 hover:bg-brand-50 transition-all active:scale-[0.98] group"
+                                        onClick={() => {
+                                            if (onConnect) {
+                                                onConnect(isConnected ? null : device.id);
+                                            }
+                                        }}
+                                        className={`w-full flex items-center p-3 rounded-[20px] border-2 transition-all active:scale-95 group ${
+                                            isConnected 
+                                                ? 'border-emerald-500 bg-emerald-50/20' 
+                                                : 'border-stone-100 hover:border-brand-200 hover:bg-brand-50'
+                                        }`}
                                     >
                                         <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${device.bg} mr-4`}>
                                             <Icon size={20} className={device.iconColor || device.color} strokeWidth={2.5} />
                                         </div>
                                         <span className="font-bold text-gray-800 text-sm text-left flex-1">{device.name}</span>
-                                        <span className="text-[10px] font-black text-brand-500 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Connect</span>
+                                        {isConnected ? (
+                                            <>
+                                                <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest transition-opacity group-hover:hidden whitespace-nowrap">
+                                                    Connected
+                                                </span>
+                                                <span className="text-[10px] font-black text-[#EA304F] uppercase tracking-widest hidden group-hover:inline-block transition-opacity whitespace-nowrap">
+                                                    Disconnect
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <span className="text-[10px] font-black text-brand-500 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                Connect
+                                            </span>
+                                        )}
                                     </button>
                                 );
                             })}

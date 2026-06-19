@@ -20,7 +20,7 @@ export const TermsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
                         initial={{ opacity: 0, scale: 0.95, y: 20 }} 
                         animate={{ opacity: 1, scale: 1, y: 0 }} 
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="absolute z-[101] bottom-0 left-0 w-full bg-[#FFFDF7] rounded-t-[32px] p-8 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] flex flex-col max-h-[85vh] overflow-hidden"
+                        className="absolute z-[101] bottom-0 left-0 w-full bg-[#FFFDF7] rounded-t-[20px] p-8 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
                     >
                         <div className="w-12 h-1.5 bg-stone-200 rounded-full mx-auto mb-6 shrink-0" />
                         
@@ -52,7 +52,7 @@ export const TermsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
                         
                         <button 
                             onClick={onClose}
-                            className="w-full bg-[#E56B25] hover:bg-[#c25a1e] text-white font-bold py-4 rounded-full shadow-[0_8px_30px_rgb(229,107,37,0.3)] active:scale-95 transition-all outline-none uppercase tracking-wider text-sm shrink-0"
+                            className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-[20px] shadow-[0_8px_30px_rgb(232,106,32,0.25)] active:scale-95 transition-all outline-none uppercase tracking-wider text-sm shrink-0"
                         >
                             I Agree (Let's Go!)
                         </button>
